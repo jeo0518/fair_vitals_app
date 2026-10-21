@@ -1,0 +1,13 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+numpy
+scipy
+pandas
+# IMPORTANT: must match the scikit-learn version in Colab that trained trust_model.joblib
+# (in Colab run: import sklearn; print(sklearn.__version__)) and write it here, e.g. scikit-learn==1.6.1
+scikit-learn
+joblib
+opencv-python-headless
+fastapi
+uvicorn[standard]
+python-multipart
