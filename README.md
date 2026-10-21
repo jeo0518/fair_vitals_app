@@ -18,9 +18,8 @@ same 17 trust features, same heart-rate estimate.
 - `models/`: put the model files here (see below).
 
 ## Models to copy from Google Drive (`congressional-app-challenge/models/`)
-1. `trust_model.joblib`
-2. The CNN checkpoint it was trained with: usually `stage2_ucla_best.pt`.
-   (The app reads the name from `trust_model.joblib`, so check the server log on startup if unsure.)
+1. `trust_model_refiner.joblib`
+2. `pos_refiner.pt` (the CNN checkpoint the trust model was trained with)
 The YuNet face model downloads automatically on first start.
 
 ## Run on your Mac

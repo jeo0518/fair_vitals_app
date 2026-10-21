@@ -3,7 +3,7 @@ torch
 numpy
 scipy
 pandas
-# IMPORTANT: must match the scikit-learn version in Colab that trained trust_model.joblib
+# IMPORTANT: must match the scikit-learn version in Colab that trained trust_model_refiner.joblib
 # (in Colab run: import sklearn; print(sklearn.__version__)) and write it here, e.g. scikit-learn==1.6.1
 scikit-learn
 joblib

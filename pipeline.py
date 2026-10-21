@@ -3,8 +3,8 @@
 Mirrors fair_vitals_trust_score.ipynb exactly (same face crops, same 17 features, same
 heart-rate estimate), so the web app behaves the way the evaluation measured.
 Models are read from ./models:
-  - trust_model.joblib            (from the trust-score notebook)
-  - the CNN checkpoint it names   (e.g. stage2_ucla_best.pt)
+  - trust_model_refiner.joblib    (from the trust-score notebook)
+  - the CNN checkpoint            (pos_refiner.pt)
   - face_detection_yunet_2023mar.onnx (downloaded automatically if missing)
 """
 import os, sys, json, subprocess, tempfile, shutil, urllib.request
@@ -18,6 +18,8 @@ from scipy.signal import butter, filtfilt, find_peaks
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.environ.get('FV_MODEL_DIR', os.path.join(HERE, 'models'))
 WORKER = os.path.join(HERE, 'worker.py')
+TRUST_FILE = 'trust_model_refiner.joblib'
+CNN_FILE = 'pos_refiner.pt'       # used when the checkpoint named inside the trust model isn't in ./models
 YUNET = os.path.join(MODEL_DIR, 'face_detection_yunet_2023mar.onnx')
 YUNET_URL = 'https://media.githubusercontent.com/media/opencv/opencv_zoo/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx'
 
@@ -75,8 +77,10 @@ ESTIMATES = {'CNN': 'hr_cnn_raw', 'CNN, flicker-corrected': 'hr_cnn_clean',
 
 class Models:
     def __init__(self):
-        self.trust = joblib.load(os.path.join(MODEL_DIR, 'trust_model.joblib'))
-        ckpt_name = self.trust.get('cnn_checkpoint', 'stage2_ucla_best.pt')
+        self.trust = joblib.load(os.path.join(MODEL_DIR, TRUST_FILE))
+        ckpt_name = self.trust.get('cnn_checkpoint', CNN_FILE)
+        if not os.path.exists(os.path.join(MODEL_DIR, ckpt_name)):
+            ckpt_name = CNN_FILE
         ck = torch.load(os.path.join(MODEL_DIR, ckpt_name), map_location=device, weights_only=False)
         self.base, self.img_size = ck['base'], ck['img_size']
         self.cnn = (PulseModel() if self.base == 'stage1' else PhysNet3D()).to(device)
