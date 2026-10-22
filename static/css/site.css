@@ -178,8 +178,7 @@ h1 {
 .line-sector {
   position: relative;
   flex: 1;
-  min-width: 60px;
-  max-width: 430px;
+  min-width: 60px;                         /* grows to fill the space, so the menu sits at the right edge */
   height: 3px;
   margin: 0 8px;
   background: #FFFFFF;
@@ -222,6 +221,7 @@ h1 {
 .nav {
   display: flex;
   gap: 32px;
+  margin-right: 12px;
 }
 
 .nav a {
@@ -551,7 +551,7 @@ th { background: #F1EBDF; font-weight: 500; }
   .border { flex-wrap: wrap; justify-content: center; gap: 8px 12px; }
   .header-image { width: 48px; }
   .brand { gap: 12px; }
-  .nav { width: 100%; justify-content: center; gap: 24px; }
+  .nav { width: 100%; justify-content: center; gap: 24px; margin-right: 0; }
   .nav a { font-size: 1.1em; }
   .card { padding: 20px; }
   .card .hr { font-size: 2.1em; }
