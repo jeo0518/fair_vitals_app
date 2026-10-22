@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My page · Fair Vitals</title>
+  <meta name="description" content="Log in to Fair Vitals or create an account.">
+  <link rel="stylesheet" href="/static/css/site.css">
+</head>
+
+<body>
+  <canvas id="space" aria-hidden="true"></canvas>
+  <div class="header">
+    <div class="header-sheen" aria-hidden="true"></div>
+    <div class="border">
+      <a class="brand" href="/" aria-label="Fair Vitals home">
+        <div class="logo-wrap">
+          <svg class="ripples" viewBox="0 0 900 900" aria-hidden="true">
+            <circle cx="450" cy="450" r="440" />
+            <circle cx="450" cy="450" r="440" />
+            <circle cx="450" cy="450" r="440" />
+            <circle cx="450" cy="450" r="440" />
+          </svg>
+          <img class="header-image" src="/source/fair_vitals_logo.png" alt="Fair Vitals logo">
+        </div>
+        <h1>Fair Vitals</h1>
+      </a>
+      <div class="line-sector" aria-hidden="true"><span class="spark"></span></div>
+      <nav class="nav">
+        <a href="/about">About</a>
+        <a href="/my" aria-current="page">My page</a>
+        <a href="#">Help</a>
+      </nav>
+    </div>
+  </div>
+  <div class="fadeout"></div>
+
+  <main class="main">
+    <section class="card account">
+      <p class="eyebrow">My page</p>
+
+      <p id="loading" class="muted">Loading…</p>
+
+      <!-- logged out: log in or create an account -->
+      <div id="signed-out" hidden>
+        <h2>Welcome</h2>
+        <p>Log in to keep a daily record of your pulse readings, or create a free account.</p>
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" id="tab-login" aria-controls="login-form" aria-selected="true">Log in</button>
+          <button class="tab" role="tab" id="tab-signup" aria-controls="signup-form" aria-selected="false">Create account</button>
+        </div>
+
+        <form id="login-form" class="auth-form" role="tabpanel" aria-labelledby="tab-login" novalidate>
+          <label class="field">Email
+            <input name="email" type="email" autocomplete="email" required>
+          </label>
+          <label class="field">Password
+            <input name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <p class="form-error" role="alert"></p>
+          <button class="btn btn-primary" type="submit">Log in</button>
+        </form>
+
+        <form id="signup-form" class="auth-form" role="tabpanel" aria-labelledby="tab-signup" novalidate hidden>
+          <label class="field"><span>Name <span class="optional">(optional)</span></span>
+            <input name="name" type="text" autocomplete="name" maxlength="60">
+          </label>
+          <label class="field">Email
+            <input name="email" type="email" autocomplete="email" required>
+          </label>
+          <label class="field"><span>Password <span class="optional">(at least 8 characters)</span></span>
+            <input name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+          </label>
+          <p class="form-error" role="alert"></p>
+          <button class="btn btn-primary" type="submit">Create account</button>
+        </form>
+      </div>
+
+      <!-- logged in -->
+      <div id="signed-in" hidden>
+        <h2>Hi, <span id="who"></span></h2>
+        <p class="muted"><span id="email"></span> · member since <span id="since"></span></p>
+        <div class="note">
+          <b>Daily pulse log: coming soon.</b> You'll be able to save each day's reading here and see how it changes
+          over time. Until then, you can <a class="link-arrow" href="/">measure your heart rate</a> on the home page.
+        </div>
+        <button id="logout" class="btn">Log out</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    Your password is stored only as a secure hash. Fair Vitals is a research prototype, not a medical device.
+  </footer>
+
+  <script src="/static/js/site.js"></script>
+  <script src="/static/js/my.js"></script>
+</body>
+</html>

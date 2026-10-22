@@ -775,3 +775,69 @@ table.data.text th, table.data.text td { text-align: left; }
   35% { box-shadow: 0 0 18px 3px rgba(201, 174, 123, 0.6), 0 0 42px 10px rgba(246, 233, 204, 0.45); }
   100% { box-shadow: 0 0 0 0 rgba(246, 233, 204, 0); }
 }
+
+/* ---------- My page: log in / create account ---------- */
+.account { max-width: 560px; width: 100%; margin: 0 auto; }
+
+[hidden] { display: none !important; }
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin: 20px 0 16px;
+  padding: 4px;
+  border-radius: 10px;
+  background: #F1EBDF;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 500;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.tab[aria-selected="true"] {
+  color: var(--ink);
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(16, 32, 29, 0.12), 0 0 14px rgba(201, 174, 123, 0.35);
+}
+
+.auth-form { display: flex; flex-direction: column; gap: 14px; }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 0.95em;
+}
+
+.field .optional { font-weight: 300; color: var(--muted); }
+
+.field input {
+  padding: 11px 12px;
+  border: 1.5px solid #DDD5C6;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 400;
+  color: var(--ink);
+  background: #FFFFFF;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 174, 123, 0.25), 0 0 16px rgba(201, 174, 123, 0.35);
+}
+
+.form-error { min-height: 1.4em; margin: 0; color: var(--bad); font-weight: 400; }
+.auth-form .btn { align-self: flex-start; }
+#signed-in .btn { margin-top: 8px; }

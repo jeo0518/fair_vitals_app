@@ -11,3 +11,4 @@ opencv-python-headless<5    # OpenCV 5 removed the Haar face detector worker.py 
 fastapi
 uvicorn[standard]
 python-multipart
+psycopg[binary]

@@ -7,7 +7,7 @@ import os, tempfile, traceback
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-import pipeline
+import pipeline, auth
 
 app = FastAPI(title='Fair Vitals (test)')
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -16,6 +16,7 @@ models = pipeline.Models()          # loaded once at startup
 print(f'Models loaded: {models.cnn_name}, trust {models.trust_file}, estimate "{models.estimate}", threshold {models.threshold}')
 app.mount('/source', StaticFiles(directory=os.path.join(HERE, 'static', 'source')), name='source')
 app.mount('/static', StaticFiles(directory=os.path.join(HERE, 'static')), name='static')
+app.include_router(auth.router)
 
 @app.get('/')
 def index():
@@ -24,6 +25,10 @@ def index():
 @app.get('/about')
 def about():
     return FileResponse(os.path.join(HERE, 'static', 'about.html'))
+
+@app.get('/my')
+def my_page():
+    return FileResponse(os.path.join(HERE, 'static', 'my.html'))
 
 @app.get('/health')
 def health():

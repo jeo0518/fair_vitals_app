@@ -20,6 +20,8 @@ same 17 trust features, same heart-rate estimate.
 - `static/about.html`: the about page (architecture, what's new, limitations).
 - `static/css/site.css`, `static/js/site.js`: the shared look and effects of every page.
 - `static/js/measure.js`: uploading a video and showing the result (home page).
+- `static/my.html`, `static/js/my.js`: My page (log in, create an account, log out).
+- `auth.py`: accounts and logins, stored in PostgreSQL.
 - `models/`: put the model files here (see below).
 
 ## Models to copy from Google Drive (`congressional-app-challenge/models/`)
@@ -33,6 +35,18 @@ The YuNet face model downloads automatically on first start.
     pip install -r requirements.txt
     uvicorn app:app --port 7860
 Open http://localhost:7860
+
+### Accounts database (PostgreSQL)
+My page needs a PostgreSQL database; the rest of the site works without one. One-time setup:
+
+    psql --version                     # check PostgreSQL is installed
+    brew services start postgresql@16  # start it (or open Postgres.app); use your installed version number
+    createdb fairvitals                # make the database
+
+The app connects to `postgresql:///fairvitals` (this computer, your Mac user, database `fairvitals`) and
+creates its tables on first use. To use another database, set `DATABASE_URL` before starting, e.g.
+`export DATABASE_URL=postgresql://user:password@host:5432/dbname`. On a host that serves the site over
+HTTPS, also set `FV_SECURE_COOKIE=1`.
 
 ## Deploy on Hugging Face Spaces (free, permanent link)
 1. Create a new Space, choose **Docker** as the SDK.
