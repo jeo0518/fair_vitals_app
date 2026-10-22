@@ -1,5 +1,5 @@
 // First-visit intro: a first-person flight through space. You drift through a nebula, accelerate to warp
-// speed, stop dead, and in the silence a transparent golden heart beats in front of you; "We invited you
+// speed, stop dead, and in the silence a transparent golden heart beats in front of you; "We invite you
 // to Fair Vitals" appears and the site fades in. Drawn live on a canvas (no video file), about 20 seconds.
 // The small script in each page's <head> adds html.intro-on for first-time visitors (or when the address
 // has ?intro), which hides the page until this finishes. Skip button and Esc skip it; with reduced motion
@@ -18,7 +18,7 @@
     stop: 8.9,            // the brakes: speed falls to nothing in STOP_LEN
     heart: 10.2,          // a glow ahead becomes the heart...
     heartNear: 15.5,      // ...which drifts close
-    line1: 14.6,          // "We invited you to"
+    line1: 14.6,          // "We invite you to"
     line2: 15.8,          // "Fair Vitals"
     bloom: 18.7,          // the last heartbeat floods the screen with light
     end: 19.9,            // the page appears
@@ -31,7 +31,7 @@
   box.setAttribute('role', 'dialog');
   box.setAttribute('aria-label', 'Intro animation');
   box.innerHTML = '<canvas aria-hidden="true"></canvas>'
-    + '<div class="intro-title"><p class="intro-l1">We invited you to</p><h1 class="intro-l2">Fair Vitals</h1></div>'
+    + '<div class="intro-title"><p class="intro-l1">We invite you to</p><h1 class="intro-l2">Fair Vitals</h1></div>'
     + '<button class="intro-skip" type="button">Skip</button>';
   document.body.prepend(box);
   const canvas = box.querySelector('canvas'), ctx = canvas.getContext('2d');
