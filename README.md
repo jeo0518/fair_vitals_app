@@ -13,13 +13,16 @@ same 17 trust features, same heart-rate estimate.
 ## Files
 - `app.py`: web server (FastAPI). `POST /analyze` takes a video, returns JSON. The video is deleted after analysis.
 - `pipeline.py`: video, then 10-second readings, then heart rate + trust score + tips.
+- `fair_vitals_core.py`: models, readings and trust features, copied unchanged from Drive (`congressional-app-challenge/`).
+  If you change it on Drive, copy it here again so the app matches the notebooks.
 - `worker.py`: decodes the video (ffmpeg) and crops the face (YuNet) in a separate process.
 - `static/index.html`: the test page.
 - `models/`: put the model files here (see below).
 
 ## Models to copy from Google Drive (`congressional-app-challenge/models/`)
 1. `trust_model_refiner.joblib`
-2. `pos_refiner.pt` (the CNN checkpoint the trust model was trained with)
+2. `pos_refiner.pt` (the POS-refiner: the heart rate the app shows)
+3. `stage2_ucla_best.pt` (the Stage 2 CNN: the trust model uses its reading as a second opinion)
 The YuNet face model downloads automatically on first start.
 
 ## Run on your Mac

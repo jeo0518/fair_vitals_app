@@ -7,7 +7,7 @@ pandas
 # (in Colab run: import sklearn; print(sklearn.__version__)) and write it here, e.g. scikit-learn==1.6.1
 scikit-learn==1.6.1
 joblib
-opencv-python-headless
+opencv-python-headless<5    # OpenCV 5 removed the Haar face detector worker.py falls back to
 fastapi
 uvicorn[standard]
 python-multipart

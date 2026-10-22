@@ -12,7 +12,7 @@ app = FastAPI(title='Fair Vitals (test)')
 HERE = os.path.dirname(os.path.abspath(__file__))
 MAX_UPLOAD_MB = 200
 models = pipeline.Models()          # loaded once at startup
-print(f'Models loaded: CNN {models.cnn_name}, estimate "{models.estimate}", threshold {models.threshold}')
+print(f'Models loaded: {models.cnn_name}, trust {models.trust_file}, estimate "{models.estimate}", threshold {models.threshold}')
 
 @app.get('/')
 def index():
