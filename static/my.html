@@ -68,6 +68,9 @@
           <label class="field">Email
             <input name="email" type="email" autocomplete="email" required>
           </label>
+          <label class="field"><span>Age <span class="optional">(used to compare your readings with the typical range for your age)</span></span>
+            <input name="age" type="number" inputmode="numeric" min="13" max="120" required>
+          </label>
           <label class="field"><span>Password <span class="optional">(at least 8 characters)</span></span>
             <input name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
           </label>
@@ -79,12 +82,52 @@
       <!-- logged in -->
       <div id="signed-in" hidden>
         <h2>Hi, <span id="who"></span></h2>
-        <p class="muted"><span id="email"></span> · member since <span id="since"></span></p>
-        <div class="note">
-          <b>Daily pulse log: coming soon.</b> You'll be able to save each day's reading here and see how it changes
-          over time. Until then, you can <a class="link-arrow" href="/">measure your heart rate</a> on the home page.
-        </div>
+        <p class="muted"><span id="email"></span> · <span id="age-text"></span> · member since <span id="since"></span>
+          · <button class="del" id="edit-age" type="button">change age</button></p>
+        <form id="age-form" class="age-form" novalidate hidden>
+          <p id="age-why" class="note" hidden>Add your age so your readings are compared with the typical resting range for your age.</p>
+          <label class="field">Age
+            <input name="age" type="number" inputmode="numeric" min="13" max="120" required>
+          </label>
+          <button class="btn btn-primary" type="submit">Save age</button>
+          <p class="form-error" role="alert"></p>
+        </form>
         <button id="logout" class="btn">Log out</button>
+      </div>
+    </section>
+
+    <!-- logged in: the pulse log -->
+    <section class="card log-card" id="log" hidden>
+      <p class="eyebrow">Your pulse log</p>
+      <h2>Resting heart rate over time</h2>
+      <div id="log-empty" class="log-empty" hidden>
+        <p>No readings yet. <a class="link-arrow" href="/">Measure your heart rate</a> on the home page and press
+           <b>Save the pulse rate</b> to start your log.</p>
+      </div>
+      <div id="log-body" hidden>
+        <div class="stats">
+          <div class="stat"><span class="num" id="stat-latest"></span><span class="lbl" id="stat-latest-lbl">latest reading</span></div>
+          <div class="stat"><span class="num" id="stat-week"></span><span class="lbl">average of the last 7 days with readings</span></div>
+          <div class="stat"><span class="num" id="stat-days"></span><span class="lbl">days logged</span></div>
+        </div>
+        <div class="range-tabs" role="tablist" aria-label="Time range">
+          <button class="tab" role="tab" data-days="30" aria-selected="true">30 days</button>
+          <button class="tab" role="tab" data-days="90" aria-selected="false">90 days</button>
+          <button class="tab" role="tab" data-days="0" aria-selected="false">All</button>
+        </div>
+        <div class="chart-wrap" id="chart-wrap">
+          <svg class="chart" id="chart" role="img" aria-labelledby="chart-desc"></svg>
+          <p id="chart-desc" class="table-note"></p>
+          <div class="tooltip" id="tooltip" hidden></div>
+        </div>
+        <h3>Each day</h3>
+        <div class="table-wrap">
+          <table class="data days" id="days">
+            <thead><tr><th>Date</th><th>Heart rate</th><th>Compared with the typical range</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="table-note">A day with more than one reading shows their average, with each reading listed under it.</p>
       </div>
     </section>
   </main>

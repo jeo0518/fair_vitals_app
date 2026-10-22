@@ -1,5 +1,8 @@
-// Home page: upload a video to /analyze and show the result.
+// Home page: upload a video to /analyze, show the result, and save it to the daily log (turning the
+// upload card over like a book page to the verdict beneath it).
 const $ = id => document.getElementById(id);
+const stillMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let lastResult = null;
 $('video').onchange = () => {
   const file = $('video').files[0];
   $('file-name').textContent = file ? file.name : 'No video chosen';
@@ -9,6 +12,7 @@ $('go').onclick = async () => {
   if (!file) { $('status').textContent = 'Choose a video first.'; return; }
   $('status').textContent = 'Uploading and analyzing… (can take a while on a CPU server)';
   $('result').innerHTML = '';
+  lastResult = null;
   $('go').disabled = true;
   const form = new FormData(); form.append('video', file);
   try {
@@ -22,7 +26,10 @@ $('go').onclick = async () => {
     let html = '';
     if (r.heart_rate_bpm !== null) {
       html += `<h2 class="hr">${r.heart_rate_bpm} <small>BPM</small></h2>`
-            + '<span class="verdict ok">Reliable reading</span>';
+            + '<span class="verdict ok">Reliable reading</span>'
+            + '<div class="save-row"><button id="save" class="btn btn-primary">Save the pulse rate</button>'
+            + '<span id="save-msg" class="muted" role="status"></span></div>';
+      lastResult = r;
     } else {
       html += '<h2 class="hr">No reliable reading</h2>'
             + `<span class="verdict bad">Please retake</span><p>${r.message || ''}</p>`;
@@ -69,4 +76,140 @@ $('result').addEventListener('click', e => {
     anim.onfinish = () => { details.open = false; details.classList.remove('closing'); };
   }
 });
-  
+
+// ---------------------------------------------------------------- saving to the daily log
+$('result').addEventListener('click', async e => {
+  if (e.target.id !== 'save' || !lastResult) return;
+  const button = e.target, msg = $('save-msg');
+  button.disabled = true;
+  msg.textContent = 'Saving…';
+  let r;
+  try {
+    const res = await fetch('/api/readings', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bpm: lastResult.heart_rate_bpm, trust: lastResult.trust_score }) });
+    r = await res.json().catch(() => ({ ok: false, message: `The server replied ${res.status}.` }));
+    if (res.status === 401) {
+      msg.innerHTML = 'Log in or create an account on <a class="link-arrow" href="/my">My page</a> to save your readings.';
+      button.disabled = false;
+      return;
+    }
+  } catch {
+    r = { ok: false, message: 'Could not reach the server.' };
+  }
+  if (!r.ok) { msg.textContent = r.message || 'Could not save this reading.'; button.disabled = false; return; }
+  msg.textContent = '';
+  button.textContent = 'Saved ✓';
+  showVerdict(r.reading, r.assessment);
+  showAdvice(r.assessment);
+  turnPage(true);
+});
+
+const LABELS = { normal: 'Within the typical range', low: 'Lower than typical', high: 'Higher than typical',
+                 unknown: 'No range for this age' };
+
+function showVerdict(reading, a) {
+  const bpm = Math.round(reading.bpm);
+  let html = '<p class="eyebrow">Saved to your daily log</p>'
+           + '<div class="verdict-head">'
+           + `<h2 class="verdict-bpm">${bpm} <small>BPM</small></h2>`
+           + `<span class="chip ${a.status}${a.far ? ' far' : ''}">${LABELS[a.status]}</span></div>`;
+  if (a.status === 'unknown') {
+    html += '<p>We don\'t have a checked resting range for this age, so this reading is saved without a comparison.</p>';
+  } else {
+    // scale from 30 to 150 BPM (wider if the reading is outside), typical range shaded, marker at the reading
+    const lo = Math.min(30, bpm - 10), hi = Math.max(150, bpm + 10), at = v => `${((v - lo) / (hi - lo) * 100).toFixed(2)}%`;
+    html += `<div class="scale" role="img" aria-label="${bpm} BPM on a scale where the typical range is ${a.low} to ${a.high} BPM">`
+          + `<div class="scale-band" style="left:${at(a.low)};width:calc(${at(a.high)} - ${at(a.low)})"></div>`
+          + `<div class="scale-mark" style="left:${at(bpm)}"></div>`
+          + `<span class="scale-tick reading" style="left:${at(bpm)}">${bpm}</span>`
+          + `<span class="scale-tick" style="left:${at(a.low)}">${a.low}</span>`
+          + `<span class="scale-tick" style="left:${at(a.high)}">${a.high}</span></div>`
+          + `<p>The typical resting heart rate for ${a.who} is <b>${a.low}–${a.high} BPM</b>`
+          + (a.age == null ? '.' : `, and you're ${a.age}.`) + '</p>';
+    if (a.age == null) {
+      html += '<p class="note">Add your age on <a class="link-arrow" href="/my">My page</a> so readings are compared with the range for your age. Until then, the adult range is used.</p>';
+    }
+    if (a.near_edge) {
+      html += '<p class="muted">This reading is within 5 BPM of the edge of the range, which is about how far off a camera reading can be. Measuring again will tell you more.</p>';
+    }
+  }
+  html += '<div class="card-actions"><button class="btn" id="again">← Measure again</button>'
+        + '<a class="btn" href="/my">See my log</a></div>';
+  $('verdict-card').querySelectorAll(':scope > :not(.card-fx)').forEach(el => el.remove());
+  $('verdict-card').insertAdjacentHTML('beforeend', html);
+  $('again').onclick = () => turnPage(false);
+}
+
+const ADVICE = {
+  normal: {
+    title: 'Keeping your readings comparable',
+    items: [
+      'Measure at about the same time each day, seated, after resting for at least 10 minutes. That makes day-to-day changes in your log meaningful.',
+      'Regular activity, enough sleep and enough water all help keep a resting heart rate steady.',
+      'Caffeine, stress, a big meal or having just moved can raise it for a while. If one day looks unusual, measure again later.',
+    ],
+  },
+  high: {
+    title: 'If your heart rate is higher than typical',
+    items: [
+      '<b>Rest, then measure again.</b> Sit quietly for at least 10 minutes first. Walking, climbing stairs, talking or feeling rushed all raise it for a while.',
+      '<b>Breathe slowly</b> for a few minutes, for example in for 4 seconds and out for 6.',
+      '<b>Drink some water.</b> Being dehydrated raises your heart rate.',
+      '<b>Cut back on stimulants:</b> coffee, energy drinks, nicotine and alcohol can all speed it up.',
+      'Fever or illness, stress or anxiety and poor sleep can also raise it.',
+      'If it stays above the range at rest on several days, talk to a doctor.',
+    ],
+  },
+  low: {
+    title: 'If your heart rate is lower than typical',
+    items: [
+      '<b>This can be normal.</b> Well-trained athletes and very active people often have a resting heart rate of 40–60 BPM.',
+      '<b>Measure again</b> in good, even light while holding still: a camera reading can be a few BPM off.',
+      '<b>Check your medicines.</b> Some, such as beta blockers, slow the heart. Your doctor or pharmacist can tell you.',
+      'If it stays below the range and you feel tired, dizzy, faint or short of breath, talk to a doctor.',
+    ],
+  },
+};
+
+function showAdvice(a) {
+  const card = $('advice-card');
+  card.querySelectorAll(':scope > :not(.card-fx)').forEach(el => el.remove());
+  card.dataset.ready = a.status === 'unknown' ? '' : '1';
+  if (!card.dataset.ready) return;
+  const tip = ADVICE[a.status];
+  let html = `<p class="eyebrow">What you can do</p><h2>${tip.title}</h2>`
+           + '<ul class="plain">' + tip.items.map(t => `<li>${t}</li>`).join('') + '</ul>';
+  if (a.status !== 'normal') {
+    html += '<p class="note urgent"><b>Get medical help right away</b> (call your local emergency number) if a fast or slow '
+          + 'heart rate comes with chest pain, fainting, severe shortness of breath or confusion.'
+          + (a.far ? ' A reading this far outside the range is also worth getting checked soon if measuring again gives the same.' : '')
+          + '</p>';
+  }
+  html += '<p class="muted">General information, not medical advice. Ranges from MedlinePlus (U.S. National Library of Medicine).</p>';
+  card.insertAdjacentHTML('beforeend', html);
+}
+
+// Turn the upload card over (forward) to the verdict beneath it, or back again.
+function turnPage(forward) {
+  const book = $('book'), front = $('page-front'), advice = $('advice-card');
+  const done = () => {
+    front.hidden = forward;
+    if (forward) {
+      advice.hidden = !advice.dataset.ready;
+      revealIn($('verdict-card')); revealIn(advice);
+      $('again').focus({ preventScroll: true });
+    }
+  };
+  front.getAnimations().forEach(a => a.cancel());
+  if (!forward) { advice.hidden = true; front.hidden = false; }
+  book.classList.toggle('turned', forward);
+  if (stillMotion) { done(); return; }
+  // rotate around the left edge like a book page; hide it once it is edge-on, so its back never shows
+  const frames = [{ transform: 'rotateY(0deg)', opacity: 1 }, { transform: 'rotateY(-90deg)', opacity: 1, offset: 0.5 },
+                  { transform: 'rotateY(-90deg)', opacity: 0, offset: 0.5001 }, { transform: 'rotateY(-180deg)', opacity: 0 }];
+  const anim = front.animate(forward ? frames : frames.slice().reverse().map((f, i, all) => ({ ...f, offset: f.offset === undefined ? undefined : 1 - f.offset })),
+                             { duration: 1000, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' });
+  anim.onfinish = done;
+  if (forward) $('book').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+

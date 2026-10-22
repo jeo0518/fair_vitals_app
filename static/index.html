@@ -66,24 +66,39 @@
       </p>
     </section>
 
-    <section class="card instruction" data-tilt>
-      <p class="eyebrow">Try it</p>
-      <p class="lead">Record a 20–30 second selfie video, then upload it.</p>
-      <ul class="steps">
-        <li>Face the camera with your whole face in the frame.</li>
-        <li>Stay still and hold the phone steady.</li>
-        <li>Use steady, even light (daylight from a window works well).</li>
-      </ul>
-      <div class="controls">
-        <label for="video" class="btn">Choose video</label>
-        <input type="file" id="video" accept="video/*">
-        <button id="go" class="btn btn-primary">Analyze</button>
-        <span id="file-name" class="file-name">No video chosen</span>
+    <!-- The upload card is the top page of a small "book". Saving a reading turns that page over to the
+         verdict page beneath it; the advice card then appears below. -->
+    <div class="book" id="book">
+      <div class="page page-back" id="page-back">
+        <section class="card verdict-card" id="verdict-card" aria-live="polite">
+          <p class="eyebrow">Your daily log</p>
+          <p class="muted">Save a reading to see how it compares with the typical resting range for your age.</p>
+        </section>
+        <div class="flip-shade" aria-hidden="true"></div>
       </div>
-      <p id="status" role="status"></p>
-      <div id="result"></div>
-      <p class="muted footnote">Your video is deleted from the server right after analysis. Research prototype, not a medical device.</p>
-    </section>
+      <div class="page page-front" id="page-front">
+        <section class="card instruction" data-tilt>
+          <p class="eyebrow">Try it</p>
+          <p class="lead">Record a 20–30 second selfie video, then upload it.</p>
+          <ul class="steps">
+            <li>Face the camera with your whole face in the frame.</li>
+            <li>Stay still and hold the phone steady.</li>
+            <li>Use steady, even light (daylight from a window works well).</li>
+          </ul>
+          <div class="controls">
+            <label for="video" class="btn">Choose video</label>
+            <input type="file" id="video" accept="video/*">
+            <button id="go" class="btn btn-primary">Analyze</button>
+            <span id="file-name" class="file-name">No video chosen</span>
+          </div>
+          <p id="status" role="status"></p>
+          <div id="result"></div>
+          <p class="muted footnote">Your video is deleted from the server right after analysis. Research prototype, not a medical device.</p>
+        </section>
+      </div>
+    </div>
+
+    <section class="card advice-card" id="advice-card" hidden></section>
   </main>
 
   <footer class="site-footer">

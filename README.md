@@ -19,9 +19,11 @@ same 17 trust features, same heart-rate estimate.
 - `static/index.html`: the home page (short explanation + the video upload).
 - `static/about.html`: the about page (architecture, what's new, limitations).
 - `static/css/site.css`, `static/js/site.js`: the shared look and effects of every page.
-- `static/js/measure.js`: uploading a video and showing the result (home page).
-- `static/my.html`, `static/js/my.js`: My page (log in, create an account, log out).
-- `auth.py`: accounts and logins, stored in PostgreSQL.
+- `static/js/measure.js`: uploading a video, showing the result, and saving it (home page: the page turns to the verdict and advice).
+- `static/my.html`, `static/js/my.js`: My page (log in, create an account, your age, the pulse log chart and daily list).
+- `auth.py`: accounts and logins (with age), stored in PostgreSQL.
+- `readings.py`: the daily pulse log (save, list, delete readings) and the check against the typical resting
+  range for the user's age (MedlinePlus ranges).
 - `models/`: put the model files here (see below).
 
 ## Models to copy from Google Drive (`congressional-app-challenge/models/`)

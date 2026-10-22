@@ -15,7 +15,9 @@
       '<div class="card-fx card-glow" aria-hidden="true"></div>' +
       '<div class="card-fx card-spin" aria-hidden="true"></div>' +
       '<div class="card-fx card-surface" aria-hidden="true"><div class="card-pearl"></div><div class="card-spot"></div></div>');
-    const spot = card.querySelector('.card-spot');
+    const spot = card.querySelector('.card-spot'), spin = card.querySelector('.card-spin');
+    // the turning border is a square spun behind the card: make it as wide as the card's diagonal
+    new ResizeObserver(() => spin.style.setProperty('--spin', `${Math.ceil(Math.hypot(card.offsetWidth, card.offsetHeight)) + 8}px`)).observe(card);
     if (!card.hasAttribute('data-tilt')) {
       card.addEventListener('pointermove', e => {
         if (e.pointerType !== 'mouse') return;
@@ -31,7 +33,9 @@
     let box = null, running = false;
     // untransformed position (from the card's offset parent), so the tilt itself doesn't move the target
     function measure() {
-      const op = card.offsetParent, base = op.getBoundingClientRect();
+      const op = card.offsetParent;
+      if (!op) return;                              // hidden (e.g. the home page's turned-over upload card)
+      const base = op.getBoundingClientRect();
       box = { left: base.left + op.clientLeft + card.offsetLeft, top: base.top + op.clientTop + card.offsetTop,
               w: card.offsetWidth, h: card.offsetHeight };
     }
@@ -52,6 +56,7 @@
     addEventListener('pointermove', e => {
       if (e.pointerType !== 'mouse') return;
       if (!box) measure();
+      if (!box) return;
       const x = e.clientX - box.left, y = e.clientY - box.top;
       if (x < -NEAR || y < -NEAR || x > box.w + NEAR || y > box.h + NEAR) {
         card.classList.remove('glow'); aim(0, 0, 1); return;

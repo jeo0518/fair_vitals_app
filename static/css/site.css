@@ -328,9 +328,9 @@ h1 {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 1600px;
-  height: 1600px;
-  margin: -800px 0 0 -800px;
+  width: var(--spin, 1600px);               /* site.js sets this to the card's diagonal, so any card is covered */
+  height: var(--spin, 1600px);
+  margin: calc(var(--spin, 1600px) / -2) 0 0 calc(var(--spin, 1600px) / -2);
   background: conic-gradient(#C9AE7B, #F6E9CC, #2F6B4F, #C9AE7B 50%, #F6E9CC, #7FA894, #C9AE7B);
   animation: spin 12s linear infinite;
   will-change: transform;
@@ -841,3 +841,203 @@ table.data.text th, table.data.text td { text-align: left; }
 .form-error { min-height: 1.4em; margin: 0; color: var(--bad); font-weight: 400; }
 .auth-form .btn { align-self: flex-start; }
 #signed-in .btn { margin-top: 8px; }
+
+/* ---------- Home: the "book" (upload card on top, verdict page beneath) ---------- */
+.book {
+  display: grid;
+  perspective: 1800px;
+  margin-bottom: 14px;                      /* room for the pages peeking out below */
+}
+
+.page {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.page > .card { flex: 1; }
+
+.page-front {
+  z-index: 2;
+  transform-origin: left center;
+  backface-visibility: hidden;
+}
+
+/* The page beneath peeks out a little below and to the right, like the next sheet of a pad... */
+.page-back {
+  z-index: 1;
+  isolation: isolate;
+  transform: translate(10px, 12px);
+  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* ...with one more sheet under it. */
+.page-back::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -5;
+  border-radius: 10px;
+  background: #EDE8DE;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transform: translate(9px, 11px);
+  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.9s ease;
+}
+
+/* Darkens the page beneath while the top page is over it; lifts away as the page turns. */
+.flip-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(16, 32, 29, 0.32), rgba(16, 32, 29, 0.12));
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+}
+
+.book.turned .page-back { transform: none; }
+.book.turned .page-back::after { transform: translate(5px, 6px); opacity: 0.7; }
+.book.turned .flip-shade { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-back, .page-back::after, .flip-shade { transition: none; }
+}
+
+.save-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* ---------- verdict page ---------- */
+.verdict-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px 16px;
+}
+
+.card .verdict-bpm { margin: 0; font-size: 3em; font-weight: 600; line-height: 1; }
+.verdict-bpm small { font-size: 0.4em; font-weight: 400; color: var(--muted); }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.9em;
+  font-weight: 500;
+  color: #FFFFFF;
+  white-space: nowrap;
+}
+
+.chip::before { font-size: 0.95em; }
+.chip.normal { background: var(--ok); }
+.chip.normal::before { content: "✓"; }
+.chip.low, .chip.high { background: #9A6B1F; }
+.chip.low::before { content: "↓"; }
+.chip.high::before { content: "↑"; }
+.chip.far { background: var(--bad); }
+.chip.unknown { background: var(--muted); }
+
+/* Where the reading falls: a scale with the typical range shaded and a marker at the reading. */
+.scale { position: relative; margin: 28px 0 34px; height: 10px; border-radius: 5px; background: #E8E1D3; }
+.scale-band { position: absolute; top: 0; bottom: 0; border-radius: 5px; background: rgba(47, 107, 79, 0.35); }
+.scale-mark {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid var(--card);
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 10px rgba(201, 174, 123, 0.9);
+}
+
+.scale-tick {
+  position: absolute;
+  top: 16px;
+  transform: translateX(-50%);
+  font-size: 0.8em;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.scale-tick.reading { top: -26px; font-weight: 600; color: var(--ink); }
+
+.card-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+a.btn { text-decoration: none; }
+
+/* ---------- advice card ---------- */
+.advice-card ul.plain li { margin-bottom: 10px; }
+.note.urgent { border-left-color: var(--bad); background: #F4E7E2; }
+
+/* ---------- My page: pulse log ---------- */
+.log-card { max-width: 820px; }
+.account.wide { max-width: 820px; }
+
+.age-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-top: 12px; }
+.age-form .field { flex: 0 0 140px; }
+
+.range-tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 10px; background: #F1EBDF; }
+.range-tabs .tab { flex: none; padding: 6px 14px; }
+
+.chart-wrap { position: relative; margin-top: 12px; }
+.chart { display: block; width: 100%; height: auto; overflow: visible; }
+.chart .grid line { stroke: #E4DDD0; stroke-width: 1; }
+.chart .axis text { fill: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.chart .band { fill: rgba(47, 107, 79, 0.10); }
+.chart .band-edge { stroke: rgba(47, 107, 79, 0.45); stroke-width: 1; }
+.chart .band-label { fill: var(--ok); font-size: 12px; font-weight: 500; paint-order: stroke; stroke: var(--card); stroke-width: 4px; stroke-linejoin: round; }
+.chart .line { fill: none; stroke: #8C7448; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .dot { fill: #8C7448; stroke: var(--card); stroke-width: 2; }
+.chart .dot.out { fill: var(--bad); }
+.chart .cross { stroke: var(--muted); stroke-width: 1; }
+.chart .hit { fill: transparent; cursor: crosshair; }
+.chart .end-label { fill: var(--ink); font-size: 12px; font-weight: 600; }
+
+.tooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  min-width: 140px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: #FFFFFF;
+  font-size: 0.85em;
+  line-height: 1.45;
+  pointer-events: none;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, calc(-100% - 12px));
+  white-space: nowrap;
+}
+
+.tooltip b { font-weight: 600; }
+.tooltip .t-muted { color: rgba(255, 255, 255, 0.7); }
+
+.log-empty { margin: 16px 0 0; }
+
+.days { width: 100%; margin-top: 16px; }
+.days th, .days td { text-align: left; vertical-align: top; }
+.days td.num { font-variant-numeric: tabular-nums; }
+.days .times { color: var(--muted); font-size: 0.92em; }
+.del {
+  margin-left: 4px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 4px;
+  font: inherit;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+.del:hover { color: var(--bad); background: #F4E7E2; }
+.small-chip { padding: 2px 9px; font-size: 0.8em; }
