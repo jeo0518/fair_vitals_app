@@ -37,32 +37,29 @@
 
   <main class="main">
     <section class="card hero">
-      <p class="eyebrow">Heart rate from a selfie</p>
-      <h2>Your pulse, read from a short video of your face.</h2>
+      <h2>Check your heart rate with a 30-second selfie video.</h2>
       <p class="lead">
-        Each heartbeat changes the colour of your skin very slightly. It is far too small to see,
-        but a camera can pick it up. Fair Vitals measures that signal in a 20–30 second selfie video,
-        then checks whether it should trust its own answer before showing you a number.
+        Every heartbeat changes the colour of your skin a tiny bit. You can't see it, but a camera can.
+        Fair Vitals picks that up from a short video of your face, and if it isn't confident in the result,
+        it tells you to try again instead of showing a number.
       </p>
       <div class="points">
         <div class="point">
-          <h3>Knows when not to trust itself</h3>
-          <p>Every 10-second reading is scored. You only see a heart rate when it is likely within 5 BPM;
-             otherwise the app asks you to retake.</p>
+          <h3>It admits when it's unsure</h3>
+          <p>Each 10 seconds of video gets a trust score. If none of them pass, you'll be asked to record again.</p>
         </div>
         <div class="point">
-          <h3>Built with skin tone in mind</h3>
-          <p>Skin tone is never used to decide whether a reading is trusted, and results were checked per
-             skin-tone group. Proving fairness still needs a larger, balanced test.</p>
+          <h3>Made with skin tone in mind</h3>
+          <p>Camera-based heart rate tends to work worse on darker skin. Our trust check never looks at skin tone, and
+             we checked results for each skin-tone group. We haven't proved it's fair yet; that needs a bigger test.</p>
         </div>
         <div class="point">
-          <h3>Tested on unseen video</h3>
-          <p>On a dataset it never trained on, readings the app accepts averaged 2.7 BPM error, with 90%
-             within 5 BPM.</p>
+          <h3>Tested on new video</h3>
+          <p>On video it had never trained on, the readings it showed were 2.7 BPM off on average.</p>
         </div>
       </div>
       <p class="more">
-        <a class="link-arrow" href="/about">How it works, what's new, and its limits →</a>
+        <a class="link-arrow" href="/about">How it works, and what it can't do yet</a>
       </p>
     </section>
 
@@ -72,26 +69,24 @@
     <div class="book" id="book">
       <div class="page" id="page-advice">
         <section class="card advice-card" id="advice-card" aria-live="polite">
-          <p class="eyebrow">What you can do</p>
-          <p class="muted">Tips for your reading appear here after you save it.</p>
+          <p class="muted">Tips for your reading will show up here once you save it.</p>
         </section>
         <div class="flip-shade" aria-hidden="true"></div>
       </div>
       <div class="page" id="page-back">
         <section class="card verdict-card" id="verdict-card" aria-live="polite">
-          <p class="eyebrow">Your daily log</p>
-          <p class="muted">Save a reading to see how it compares with the typical resting range for your age.</p>
+          <p class="muted">Save a reading and you'll see how it compares with the usual range for your age.</p>
         </section>
         <div class="flip-shade" aria-hidden="true"></div>
       </div>
       <div class="page" id="page-front">
         <section class="card instruction" data-tilt>
           <p class="eyebrow">Try it</p>
-          <p class="lead">Record a 20–30 second selfie video, then upload it.</p>
+          <p class="lead">Record about 20–30 seconds of your face and upload it.</p>
           <ul class="steps">
-            <li>Face the camera with your whole face in the frame.</li>
-            <li>Stay still and hold the phone steady.</li>
-            <li>Use steady, even light (daylight from a window works well).</li>
+            <li>Keep your whole face in the frame.</li>
+            <li>Sit still and hold the phone steady.</li>
+            <li>Find even light. Facing a window during the day works well.</li>
           </ul>
           <div class="controls">
             <label for="video" class="btn">Choose video</label>
@@ -101,7 +96,7 @@
           </div>
           <p id="status" role="status"></p>
           <div id="result"></div>
-          <p class="muted footnote">Your video is deleted from the server right after analysis. Research prototype, not a medical device.</p>
+          <p class="muted footnote">We delete your video as soon as it's been analysed.</p>
         </section>
       </div>
     </div>
@@ -109,7 +104,7 @@
   </main>
 
   <footer class="site-footer">
-    Fair Vitals is a research prototype. <a href="/about#limits">Read its limitations</a>.
+    Fair Vitals is a student research project, not a medical device. <a href="/about#limits">What it can't do yet</a>
   </footer>
 
   <script src="/static/js/site.js"></script>

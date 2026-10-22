@@ -3,7 +3,7 @@
 // (auth.py, readings.py); the session lives in an HttpOnly cookie, so this script never sees it.
 const $ = id => document.getElementById(id);
 const SVG = 'http://www.w3.org/2000/svg';
-const STATUS = { normal: 'Within range', low: 'Lower than typical', high: 'Higher than typical', unknown: 'No range' };
+const STATUS = { normal: 'Normal', low: 'Low', high: 'High', unknown: 'No range' };
 let log = null, span = 30;              // the last /api/readings answer; days shown in the chart (0 = all)
 
 function show(user) {
@@ -14,7 +14,7 @@ function show(user) {
   if (!user) return;
   $('who').textContent = user.name || user.email.split('@')[0];
   $('email').textContent = user.email;
-  $('age-text').textContent = user.age == null ? 'age not set' : `age ${user.age}`;
+  $('age-text').textContent = user.age == null ? 'no age yet' : `${user.age} years old`;
   $('since').textContent = new Date(user.member_since + 'T00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   $('age-form').hidden = user.age != null;
   $('age-why').hidden = user.age != null;
@@ -60,7 +60,7 @@ function wire(form, send) {
       form.reset();
       show(r.user);
     } catch {
-      error.textContent = 'Could not reach the server. Is it running?';
+      error.textContent = "Couldn't reach the server. Is it running?";
     } finally {
       button.disabled = false;
     }
@@ -80,7 +80,7 @@ $('logout').onclick = async () => {
 // ---------------------------------------------------------------- the pulse log
 async function loadLog() {
   const r = await api('/api/readings').catch(() => ({ ok: false }));
-  if (!r.ok) { $('log-empty').hidden = false; $('log-empty').textContent = r.message || 'Could not load your readings.'; return; }
+  if (!r.ok) { $('log-empty').hidden = false; $('log-empty').textContent = r.message || "Couldn't load your readings."; return; }
   log = r;
   const has = r.readings.length > 0;
   $('log-empty').hidden = has;
@@ -111,7 +111,7 @@ function days() {
 function renderStats() {
   const all = days(), last = log.readings[log.readings.length - 1], week = all.slice(-7);
   $('stat-latest').textContent = `${Math.round(last.bpm)} BPM`;
-  $('stat-latest-lbl').textContent = `latest reading, ${fmtDay(new Date(last.measured_at))}`;
+  $('stat-latest-lbl').textContent = `last reading, ${fmtDay(new Date(last.measured_at))}`;
   $('stat-week').textContent = `${Math.round(week.reduce((s, d) => s + d.bpm, 0) / week.length)} BPM`;
   $('stat-days').textContent = all.length;
 }
@@ -136,7 +136,7 @@ function renderChart() {
   const W = Math.max(wrap.clientWidth, 280), H = W < 500 ? 220 : 280;
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   if (!pts.length) {
-    el('text', { x: W / 2, y: H / 2, 'text-anchor': 'middle', fill: 'currentColor' }, svg, `No readings in the last ${span} days.`);
+    el('text', { x: W / 2, y: H / 2, 'text-anchor': 'middle', fill: 'currentColor' }, svg, `Nothing saved in the last ${span} days.`);
     $('chart-desc').textContent = '';
     return;
   }
@@ -158,7 +158,7 @@ function renderChart() {
     el('rect', { class: 'band', x: m.l, width: iw, y: y(log.range.high), height: y(log.range.low) - y(log.range.high) }, svg);
     el('line', { class: 'band-edge', x1: m.l, x2: W - m.r, y1: y(log.range.high), y2: y(log.range.high) }, svg);
     el('line', { class: 'band-edge', x1: m.l, x2: W - m.r, y1: y(log.range.low), y2: y(log.range.low) }, svg);
-    el('text', { class: 'band-label', x: m.l + 8, y: y(log.range.high) + 16 }, svg, `Typical range ${log.range.low}–${log.range.high}`);
+    el('text', { class: 'band-label', x: m.l + 8, y: y(log.range.high) + 16 }, svg, `Normal range, ${log.range.low} to ${log.range.high}`);
   }
   // x axis: as many evenly spaced dates as fit (about one per 90 px), at most 6
   const n = Math.max(2, Math.min(6, Math.floor(iw / 90)));
@@ -180,7 +180,7 @@ function renderChart() {
     cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.setAttribute('visibility', 'visible');
     tip.innerHTML = `<b>${fmtDay(p.date, true)}</b><br>${Math.round(p.bpm)} BPM`
       + (p.readings.length > 1 ? ` <span class="t-muted">(average of ${p.readings.length})</span>` : '')
-      + `<br><span class="t-muted">${STATUS[statusOf(p.bpm)]}</span>`;
+      + `<br><span class="t-muted">${{ normal: 'In the normal range', low: 'Below the normal range', high: 'Above the normal range', unknown: '' }[statusOf(p.bpm)]}</span>`;
     tip.hidden = false;
     tip.style.left = `${cx * box.width / W}px`;
     tip.style.top = `${y(p.bpm) * box.height / H}px`;
@@ -188,8 +188,8 @@ function renderChart() {
   hit.onpointerleave = () => { tip.hidden = true; cross.setAttribute('visibility', 'hidden'); };
 
   const out = pts.filter(p => statusOf(p.bpm) !== 'normal').length;
-  $('chart-desc').textContent = `${pts.length} day${pts.length > 1 ? 's' : ''} shown, from ${fmtDay(pts[0].date, true)} to ${fmtDay(lastP.date, true)}. `
-    + (log.range ? `${out} outside the typical range (red dots). ` : '') + 'Hover over the chart for each day.';
+  $('chart-desc').textContent = `${fmtDay(pts[0].date, true)} to ${fmtDay(lastP.date, true)}, ${pts.length} day${pts.length > 1 ? 's' : ''}. `
+    + (log.range && out ? `Red dots are outside the normal range (${out}). ` : '') + 'Point at a day to see its numbers.';
 }
 
 function renderDays() {
@@ -210,9 +210,9 @@ function renderDays() {
       del.className = 'del'; del.type = 'button'; del.textContent = '×';
       del.title = 'Delete this reading'; del.setAttribute('aria-label', `Delete the ${fmtTime(r.time)} reading`);
       del.onclick = async () => {
-        if (!confirm(`Delete the ${Math.round(r.bpm)} BPM reading from ${fmtDay(r.time, true)}, ${fmtTime(r.time)}?`)) return;
+        if (!confirm(`Delete ${Math.round(r.bpm)} BPM from ${fmtDay(r.time, true)} at ${fmtTime(r.time)}?`)) return;
         const res = await api(`/api/readings/${r.id}`, undefined, 'DELETE');
-        if (res.ok) loadLog(); else alert(res.message || 'Could not delete this reading.');
+        if (res.ok) loadLog(); else alert(res.message || "Couldn't delete that reading.");
       };
       item.append(del);
       times.append(item);
@@ -238,9 +238,9 @@ addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setT
 (async () => {
   try {
     const r = await api('/api/me');
-    if (!r.ok) { fail(r.message || 'Accounts are not available right now.'); return; }
+    if (!r.ok) { fail(r.message || "Accounts aren't working right now. Please try again later."); return; }
     show(r.user);
   } catch {
-    fail('Could not reach the server.');
+    fail("Couldn't reach the server.");
   }
 })();

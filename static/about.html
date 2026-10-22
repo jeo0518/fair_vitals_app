@@ -38,35 +38,36 @@
   <main class="main">
     <!-- ======================= intro ======================= -->
     <section class="card hero">
-      <p class="eyebrow">About</p>
-      <h2>Heart rate from a selfie, with an honest answer when it can't tell.</h2>
+      <h2>What Fair Vitals is</h2>
+      <!-- YOUR STORY: a few sentences in your own words about why you started this project goes here. -->
       <p class="lead">
-        Fair Vitals estimates heart rate from a short video of your face. On video it had never seen,
-        it halved the error of the standard method. It knows when not to trust itself, and it was designed
-        and evaluated with skin-tone fairness in mind, including an honest account of where it still
-        falls short.
+        Fair Vitals estimates your heart rate from a short video of your face. On video it had never seen
+        before, it cut the error of the standard method roughly in half. It also tells you when it isn't sure,
+        instead of guessing.
+      </p>
+      <p>
+        Camera-based heart rate tends to work worse on darker skin, so we tried to keep that in mind from the
+        start. We haven't proved the app is fair yet, and the limits section below says why.
       </p>
       <div class="stats">
-        <div class="stat"><span class="num">2×</span><span class="lbl">lower error than standard POS on an unseen dataset (11.1 → 5.2 BPM)</span></div>
-        <div class="stat"><span class="num">90%</span><span class="lbl">of the readings it accepts are within 5 BPM on that dataset</span></div>
-        <div class="stat"><span class="num">0</span><span class="lbl">skin-tone or brightness inputs in the decision to trust a reading</span></div>
+        <div class="stat"><span class="num">5.2 BPM</span><span class="lbl">average error on video it never trained on (the standard method: 11.1)</span></div>
+        <div class="stat"><span class="num">90%</span><span class="lbl">of the readings it showed there were within 5 BPM</span></div>
+        <div class="stat"><span class="num">0</span><span class="lbl">times skin tone or brightness goes into deciding whether to trust a reading</span></div>
       </div>
       <p class="note">
-        <b>On "novelty".</b> Most of this work is <em>original to our project</em>: we built, tested and
-        measured it ourselves. It is not necessarily <em>new to the field</em>. Learned refinement of POS,
-        signal-quality scoring and background-based light correction have all been explored in published
-        camera-pulse (rPPG) research. What is ours is the combination, the findings and the rigour of the
-        evaluation.
+        A note on what's actually new here: we built and tested all of this ourselves, but the main ideas aren't
+        new to the field. Others have published work on improving POS with a learned model, on scoring signal
+        quality, and on using the background to correct for lighting. What's ours is how we put them together,
+        what we found, and how carefully we tested it.
       </p>
     </section>
 
     <!-- ======================= architecture ======================= -->
     <section class="card" id="how">
-      <p class="eyebrow">Architecture</p>
       <h2>How it works</h2>
       <p>
-        Your video is cut into overlapping 10-second windows, a new one every 5 seconds. Each window gets
-        a heart rate and a trust score, and only trusted readings are combined into the number you see.
+        We cut your video into 10-second pieces that overlap, starting a new one every 5 seconds. Each piece gets
+        its own heart rate and its own trust score. The number you see comes only from the pieces we trust.
       </p>
 
       <div class="pipeline" role="img" aria-label="Pipeline: selfie video, face crop, then for every 10-second window the POS refiner gives the heart rate while the Stage 2 CNN, POS with flicker check, and motion, lighting and background measures feed 18 features to the trust model; a number is shown only when the trust model says ok.">
@@ -92,169 +93,165 @@
       <h3>The parts</h3>
       <div class="table-wrap">
         <table class="data text">
-          <tr><th>Component</th><th>Type</th><th>Role</th></tr>
-          <tr><td>POS refiner</td><td>1D dilated residual CNN, about 85k parameters</td><td>Produces the heart rate: the POS pulse plus a learned correction</td></tr>
-          <tr><td>Stage 2 CNN</td><td>3D CNN trained on synthetic faces (SCAMPS, then UCLA synthetic)</td><td>Second opinion that feeds the trust model</td></tr>
-          <tr><td>Trust model</td><td>Gradient-boosted trees</td><td>Probability that the reading is within 5 BPM</td></tr>
-          <tr><td>Face detection, POS, flicker check</td><td>Pretrained, classical and rule-based</td><td>Fixed steps, no training</td></tr>
+          <tr><th>Part</th><th>What it is</th><th>What it does</th></tr>
+          <tr><td>POS refiner</td><td>A small 1D neural network (about 85k parameters)</td><td>Gives the heart rate: it takes the POS signal and learns to correct it</td></tr>
+          <tr><td>Stage 2 CNN</td><td>A 3D neural network trained on computer-generated faces (SCAMPS, then UCLA)</td><td>A second opinion for the trust model</td></tr>
+          <tr><td>Trust model</td><td>Gradient-boosted decision trees</td><td>Guesses how likely the reading is to be within 5 BPM</td></tr>
+          <tr><td>Face detection, POS, flicker check</td><td>An off-the-shelf detector, a classic formula, and a simple rule</td><td>Fixed steps, nothing trained</td></tr>
         </table>
       </div>
       <p class="table-note">
-        POS ("plane orthogonal to skin") is a standard, training-free way to pull the pulse out of skin colour.
-        The refiner starts out as exactly POS before training and learns only a correction on top of it.
+        POS is a well-known way to pull a pulse out of skin colour without any training. Our refiner starts out
+        doing exactly what POS does and only learns a correction on top.
       </p>
 
       <h3>Data</h3>
       <p>
-        Trained on <b>UBFC-rPPG</b> (42 people) and <b>UBFC-Phys</b> (23 people), evaluated with
-        person-level cross-validation, so no person is ever in both training and testing.
-        <b>TU Eindhoven</b> (3 people, with lighting changes and motion) was held out completely and never
-        used to train anything.
+        We trained on two public datasets, UBFC-rPPG (42 people) and UBFC-Phys (23 people). We always tested on
+        people the model hadn't trained on. A third dataset, TU Eindhoven (3 people, with changing light and
+        movement), we kept aside completely and never trained anything on.
       </p>
     </section>
 
     <!-- ======================= novelty ======================= -->
     <section class="card" id="new">
-      <p class="eyebrow">What's new in this project</p>
       <h2>What we found</h2>
 
-      <h3>1. A learned POS refiner that generalizes</h3>
+      <h3>The refiner does better on video it hasn't seen</h3>
       <p>
-        On TU Eindhoven, a dataset it never saw, the refiner halved the error. On the datasets it was trained
-        on it ties POS, which is expected: it starts as POS and only learns a correction.
+        On TU Eindhoven, the refiner's error was about half that of POS. On the two datasets it trained on, it
+        does about as well as POS, which makes sense, since it starts out as POS.
       </p>
       <div class="table-wrap">
         <table class="data">
-          <tr><th>Dataset</th><th>POS</th><th>POS + flicker correction</th><th>Refiner</th></tr>
-          <tr><td>UBFC-rPPG (cross-validated, 42 people)</td><td>1.21</td><td>1.23</td><td>1.35</td></tr>
-          <tr><td>UBFC-Phys (cross-validated, 23 people)</td><td>11.62</td><td>11.49</td><td>10.94</td></tr>
-          <tr class="best"><td>TU Eindhoven (held out)</td><td>11.11</td><td>10.84</td><td>5.17</td></tr>
+          <tr><th>Dataset</th><th>POS</th><th>POS + flicker fix</th><th>Refiner</th></tr>
+          <tr><td>UBFC-rPPG (42 people)</td><td>1.21</td><td>1.23</td><td>1.35</td></tr>
+          <tr><td>UBFC-Phys (23 people)</td><td>11.62</td><td>11.49</td><td>10.94</td></tr>
+          <tr class="best"><td>TU Eindhoven (never trained on)</td><td>11.11</td><td>10.84</td><td>5.17</td></tr>
         </table>
       </div>
       <p class="table-note">
-        Mean absolute error in BPM. On TU, readings within 5 BPM went from 60% (POS) to 75% (refiner), and all
-        three participants improved (P1 7.2 → 3.6, P2 12.0 → 5.2, P3 17.6 → 8.6). The biggest gains were under
-        changing light and motion (one motion scenario: 37.7 → 9.4 BPM). On the UBFC datasets the difference
-        from POS is a statistical tie (95% bootstrap intervals over people include zero).
+        Average error in BPM. On TU Eindhoven the share of readings within 5 BPM went from 60% to 75%, and all three
+        people got better results (7.2 to 3.6, 12.0 to 5.2, and 17.6 to 8.6). It helped most with changing light
+        and movement; in one movement test the error dropped from 37.7 to 9.4. On the two UBFC datasets the
+        difference from POS isn't statistically meaningful.
       </p>
 
-      <h3>2. A skin-tone-blind trust model</h3>
+      <h3>The trust model never looks at skin tone</h3>
       <p>
-        The trust model predicts whether a reading is reliable from how much the different methods disagree,
-        signal quality, motion, lighting and flicker. <b>Skin tone and brightness are deliberately left out</b>
-        as inputs, so the decision to trust a reading can't be based on them directly.
+        To decide whether to trust a reading, the trust model looks at how much the different methods disagree,
+        how clean the signal is, and how much movement, lighting change and flicker there was. We left skin tone
+        and brightness out on purpose, so it can't decide based on them.
       </p>
       <div class="table-wrap">
         <table class="data">
-          <tr><th>TU Eindhoven (held out)</th><th>Readings kept</th><th>Error of kept</th><th>Within 5 BPM, kept</th></tr>
-          <tr><td>Old: POS + old trust model</td><td>43%</td><td>5.12</td><td>82%</td></tr>
-          <tr class="best"><td>New: refiner + new trust model</td><td>39%</td><td>2.72</td><td>90%</td></tr>
+          <tr><th>TU Eindhoven</th><th>Readings shown</th><th>Their error</th><th>Within 5 BPM</th></tr>
+          <tr><td>Before: POS + old trust model</td><td>43%</td><td>5.12</td><td>82%</td></tr>
+          <tr class="best"><td>Now: refiner + new trust model</td><td>39%</td><td>2.72</td><td>90%</td></tr>
         </table>
       </div>
-      <p class="table-note">Trust and error correlate at −0.57: the less the app trusts a reading, the more wrong it tends to be.</p>
+      <p class="table-note">The lower the trust score, the bigger the error tended to be (correlation −0.57).</p>
 
-      <h3>3. The flicker discovery</h3>
+      <h3>A flickering lamp can look like a heartbeat</h3>
       <p>
-        Flickering light created a fake "pulse" of about 125 BPM that fooled both POS and the CNN. We confirmed
-        it by comparing the face with the background around it: the background pulsed at the same rate, which
-        a real heartbeat never does. The app now detects this and corrects for it.
+        At one point both POS and the CNN were reading about 125 BPM where there was no such pulse. It turned out
+        to be the light flickering. The giveaway was the wall behind the person: it "pulsed" at the same rate,
+        and a real heartbeat doesn't show up on a wall. The app now checks for this and corrects it.
       </p>
 
-      <h3>4. A physical explanation for the hardest case</h3>
+      <h3>Why the hardest case was hard</h3>
       <p>
-        The hardest test person (TU participant P3, the darkest skin in the test set) was filmed with an
-        under-exposed face against a bright background: face brightness about 48 out of 255, background about
-        116. The pulse was only about 0.2% of face brightness, roughly a tenth of one step in pixel brightness,
-        with the 125 BPM flicker on top. It is a concrete, measured illustration of why camera pulse measurement
-        is harder on darker skin, and why exposure matters.
+        The person the app struggled with most had the darkest skin in the test set, and their face was underexposed
+        in front of a bright background (face brightness around 48 out of 255, background around 116). Their pulse
+        changed the face's brightness by only about 0.2%, which is about a tenth of the smallest brightness step a
+        camera pixel can record, and the 125 BPM flicker was on top of that. It's a measured example of why this is
+        harder on darker skin, and why good lighting matters so much.
       </p>
 
-      <h3>5. A careful evaluation</h3>
+      <h3>How we kept ourselves honest</h3>
       <ul class="plain">
-        <li>Person-level cross-validation: no person in both training and test.</li>
-        <li>Bootstrap confidence intervals over people, not over individual readings.</li>
-        <li>A fully held-out dataset (TU Eindhoven).</li>
-        <li>Decision rules set before seeing the results.</li>
-        <li>Retiring our own claims when more data disagreed: an early "significantly better on UBFC-Phys"
-            (−1.60 BPM with 10 people) became a tie with 23 people.</li>
+        <li>Nobody's video was ever used for both training and testing.</li>
+        <li>Our confidence intervals count people, not individual readings.</li>
+        <li>One dataset stayed completely untouched until the final test.</li>
+        <li>We decided how to judge each result before seeing it.</li>
+        <li>We took back a claim when more data disagreed. With 10 people the refiner looked clearly better on
+            UBFC-Phys (−1.60 BPM); with 23 people it was a tie.</li>
       </ul>
 
-      <h3>6. What didn't work</h3>
+      <h3>What didn't work</h3>
       <ul class="plain">
-        <li><b>CNNs trained on synthetic faces did not beat POS on real faces</b>, even after fine-tuning on
-            real people, which overfit.</li>
-        <li><b>A larger network made no difference</b> (a statistical tie), so the bottleneck is the gap between
-            synthetic and real video, not model size.</li>
-        <li><b>Learning to pick POS or the CNN for each window did not beat POS</b>, matching a ceiling test run
-            in advance.</li>
-        <li><b>Smoothing readings by quality</b> helped hard video slightly but cost a little on clean video,
-            and the refiner replaced it.</li>
+        <li>Neural networks trained on computer-generated faces didn't beat POS on real faces, even after we
+            fine-tuned them on real people (they overfit).</li>
+        <li>A bigger network didn't help either. The problem is the gap between generated and real video, not
+            the size of the model.</li>
+        <li>Letting a model choose between POS and the CNN for each piece of video didn't beat plain POS. A test
+            we ran beforehand had predicted that.</li>
+        <li>Smoothing readings based on quality helped a little on hard videos but hurt a little on easy ones.
+            The refiner replaced it.</li>
       </ul>
     </section>
 
     <!-- ======================= limitations ======================= -->
     <section class="card" id="limits">
-      <p class="eyebrow">Limitations</p>
-      <h2>What has not been proved</h2>
+      <h2>What we haven't proved</h2>
       <p class="note warn">
-        Fair Vitals is a research prototype, <b>not a medical device</b>. Don't use it to make health decisions.
+        Fair Vitals is a student research project, not a medical device. Please don't use it to make decisions
+        about your health.
       </p>
       <ol class="plain">
-        <li><b>Fairness across skin tones.</b> Skin tone is mixed up with how hard each dataset is, measured skin
-            tone shifts with lighting, and the groups are small. We built for fairness and checked for it; we
-            have not proved it.</li>
-        <li><b>That it works on phone videos.</b> Every number above comes from webcams or lab cameras. Phone
-            auto-exposure, compression and changing frame rates are untested, and this website is mostly used
-            with phone videos.</li>
-        <li><b>That the refiner beats POS in general.</b> It ties on the UBFC datasets; the clear win is on TU
-            Eindhoven, which is only 3 people from one lab.</li>
-        <li><b>That the trust model holds up in new conditions.</b> It still accepted some wrong readings for the
-            hardest test person (14% kept, about 10 BPM off in an earlier run).</li>
-        <li><b>End-to-end accuracy on UBFC.</b> The full-app check used models trained on all UBFC people, so its
-            UBFC numbers are in-sample. Only its TU Eindhoven result is a clean test.</li>
+        <li><b>That it's fair across skin tones.</b> In our data, skin tone is tangled up with how hard each dataset
+            is, measured skin tone changes with lighting, and the groups are small. We designed for fairness and
+            checked for it, but that's not the same as proving it.</li>
+        <li><b>That it works on phone videos.</b> All of our numbers come from webcams and lab cameras. We haven't
+            tested phone auto-exposure, compression or changing frame rates, even though most people will use a
+            phone here.</li>
+        <li><b>That the refiner beats POS in general.</b> It ties on UBFC. The clear win is on TU Eindhoven, which is
+            only 3 people from one lab.</li>
+        <li><b>That the trust model holds up in new situations.</b> For the hardest test person it still let some wrong
+            readings through (it showed 14% of them, and those were about 10 BPM off in an earlier run).</li>
+        <li><b>How accurate the whole app is on UBFC.</b> Our full-app check used models trained on everyone in UBFC,
+            so those numbers aren't a fair test. Only the TU Eindhoven result is.</li>
       </ol>
 
-      <h3>Limits of this website</h3>
+      <h3>Limits of the website</h3>
       <ul class="plain">
-        <li>It needs at least 10 seconds of video and analyses at most the first 60 seconds. Videos larger than
-            200 MB are rejected.</li>
-        <li>Your face needs to be visible, still and evenly lit. Movement, dim or changing light, a bright window
-            behind you, or flickering lamps and screens make readings less reliable, and you'll more often be asked
-            to retake.</li>
-        <li>The heart rate shown is the middle value of the trusted 10-second readings. The trust score is the
-            middle value across <em>all</em> readings, so a result can be shown with a fairly low overall score
-            when only some readings passed.</li>
-        <li>The analysis runs on a CPU server, so it can take a minute or more, and the server handles one video
-            at a time.</li>
-        <li>A separate rule looks at face brightness only to suggest better light ("your face looks too dark");
-            it never changes the reading or the trust decision.</li>
-        <li>Your video is uploaded to the server for analysis and deleted right after; the app keeps nothing.</li>
+        <li>Videos need to be at least 10 seconds long. We only look at the first 60 seconds, and files over 200 MB
+            won't upload.</li>
+        <li>Your face needs to be in view, still and evenly lit. Moving around, dim or changing light, a bright window
+            behind you, or a flickering lamp or screen will make it ask you to try again more often.</li>
+        <li>The heart rate you see is the middle value of the pieces we trusted. The trust score is the middle value of
+            all the pieces, so you can get a heart rate with a fairly low trust score when only some pieces passed.</li>
+        <li>It runs on an ordinary server without a graphics card, so a video can take a minute or more, and it handles
+            one video at a time.</li>
+        <li>We look at how bright your face is only to suggest better light. It never changes the reading or whether
+            we trust it.</li>
+        <li>Your video is deleted as soon as it's been analysed. If you're logged in and press Save, we keep the heart
+            rate and the time, nothing else.</li>
       </ul>
     </section>
 
     <!-- ======================= next ======================= -->
     <section class="card" id="next">
-      <p class="eyebrow">Next steps</p>
-      <h2>How fairness could be tested properly</h2>
+      <h2>What we'd do next</h2>
+      <p>To really test fairness, we'd need people across skin tones measured the same way. Two ways to get there:</p>
       <div class="two-col">
         <div class="point">
-          <h3>Controlled home pilot</h3>
-          <p>The same phone, lighting and steps for everyone, people across skin tones, and a fingertip pulse
-             oximeter as the reference. Then compare each group's error, and the gap between groups, for the app
-             versus POS.</p>
+          <h3>A small test at home</h3>
+          <p>Same phone, same lighting and same steps for everyone, with a fingertip pulse oximeter as the reference.
+             Then compare how far off the app is for each skin-tone group, and against POS.</p>
         </div>
         <div class="point">
-          <h3>Balanced public datasets</h3>
-          <p>MMPD (33 people, phone video, Fitzpatrick skin types 3–6) and VitalVideos (hundreds of people with
-             Fitzpatrick labels). Both need a signed academic access agreement.</p>
+          <h3>Bigger public datasets</h3>
+          <p>MMPD (33 people filmed on phones, Fitzpatrick skin types 3–6) and VitalVideos (hundreds of people with skin
+             type labels). Both need a signed academic agreement.</p>
         </div>
       </div>
-      <p class="more"><a class="link-arrow" href="/">← Try Fair Vitals</a></p>
+      <p class="more"><a class="link-arrow" href="/">Try it yourself</a></p>
     </section>
   </main>
 
   <footer class="site-footer">
-    Fair Vitals is a research prototype, not a medical device. Figures as of October 2026.
+    Numbers as of October 2026.
   </footer>
 
   <script src="/static/js/site.js"></script>

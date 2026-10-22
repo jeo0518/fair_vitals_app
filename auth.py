@@ -74,7 +74,7 @@ def connect():
 
 
 def db_down():
-    return JSONResponse({'ok': False, 'message': 'The account database is not available right now.'}, 503)
+    return JSONResponse({'ok': False, 'message': "Accounts aren't working right now. Please try again later."}, 503)
 
 
 # ---------------------------------------------------------------- passwords and tokens
@@ -149,8 +149,10 @@ def parse_age(value):
         age = int(str(value).strip())
     except ValueError:
         return None, 'Please enter your age as a number.'
-    if not MIN_AGE <= age <= MAX_AGE:
-        return None, f'Accounts are for ages {MIN_AGE} and over. Please enter an age from {MIN_AGE} to {MAX_AGE}.'
+    if age < MIN_AGE:
+        return None, f'You need to be {MIN_AGE} or older to make an account.'
+    if age > MAX_AGE:
+        return None, f'Please enter an age between {MIN_AGE} and {MAX_AGE}.'
     return age, None
 
 
@@ -195,14 +197,14 @@ async def signup(request: Request, response: Response):
     name = str(body.get('name', '')).strip()
     password = str(body.get('password', ''))
     if not EMAIL_RE.match(email) or len(email) > 254:
-        return bad('Please enter a valid email address.')
+        return bad("That doesn't look like an email address.")
     if len(name) > 60:
         return bad('Please keep your name under 60 characters.')
     age, error = parse_age(body.get('age', ''))
     if error:
         return bad(error)
     if len(password) < 8:
-        return bad('Please use a password of at least 8 characters.')
+        return bad('Your password needs at least 8 characters.')
     if len(password) > 128:
         return bad('Please keep your password under 128 characters.')
 
@@ -213,7 +215,7 @@ async def signup(request: Request, response: Response):
                 user_id = conn.execute('INSERT INTO users (email, name, password_hash, birth_year) VALUES (%s, %s, %s, %s) '
                                        'RETURNING id', (email, name, pw_hash, datetime.now().year - age)).fetchone()[0]
             except psycopg.errors.UniqueViolation:
-                return bad('An account with this email already exists. Try logging in instead.', 409)
+                return bad("There's already an account with this email. Try logging in.", 409)
             start_session(conn, user_id, request, response)
             return {'ok': True, 'user': user_by_id(conn, user_id)}
     try:
@@ -231,14 +233,14 @@ async def login(request: Request, response: Response):
     password = str(body.get('password', ''))[:128]
     key = (request.client.host if request.client else '?', email.lower())
     if too_many(key):
-        return bad('Too many attempts. Please wait 15 minutes and try again.', 429)
+        return bad('Too many tries. Please wait 15 minutes and try again.', 429)
 
     def work():
         with connect() as conn:
             row = conn.execute('SELECT id, password_hash FROM users WHERE lower(email) = lower(%s)', (email,)).fetchone()
             if not check_password(password, row[1] if row else _DUMMY_HASH) or row is None:
                 note_fail(key)
-                return bad('Email or password is incorrect.', 401)
+                return bad("That email and password don't match.", 401)
             conn.execute('DELETE FROM sessions WHERE user_id = %s AND expires_at <= now()', (row[0],))
             start_session(conn, row[0], request, response)
             return {'ok': True, 'user': user_by_id(conn, row[0])}

@@ -22,9 +22,9 @@ MAX_LIST = 1000                     # readings returned to My page
 def typical_range(age):
     """(low, high, who) for a resting heart rate, or None when we have no checked range for this age."""
     if age is None or age >= 10:
-        return 60, 100, 'ages 10 and over, including adults and seniors'
+        return 60, 100, 'adults and children 10 and older'
     if age >= 7:
-        return 70, 110, 'children 7 to 9'
+        return 70, 110, 'children aged 7 to 9'
     return None
 
 

@@ -54,14 +54,14 @@ def face_clip(video_path, workdir):
 def tips_for(rejected, dark):
     tips = []
     if dark:
-        tips.append('Your face looks too dark. Move to brighter, even light (e.g. face a window).')
+        tips.append('Your face looks quite dark. Try facing a window or moving somewhere brighter.')
     if len(rejected):
         med = rejected.median(numeric_only=True)
         if med.get('face_found', 1) < 0.8: tips.append('Keep your whole face in the frame.')
-        if med.get('motion_xy', 0) > 0.03 or med.get('frame_change', 0) > 0.03: tips.append('Hold still and keep your phone steady.')
-        if rejected.flicker_flag.mean() > 0.3: tips.append('The lighting seems to flicker. Try daylight or a different lamp.')
-        if med.get('light_change', 0) > 0.03: tips.append('Avoid changing light (screens, moving shadows).')
-        if not tips: tips.append('The pulse signal was weak. Try brighter light, hold the phone closer, and stay still.')
+        if med.get('motion_xy', 0) > 0.03 or med.get('frame_change', 0) > 0.03: tips.append('Try to keep still and hold the phone steady.')
+        if rejected.flicker_flag.mean() > 0.3: tips.append('The light seems to flicker. Daylight or a different lamp should help.')
+        if med.get('light_change', 0) > 0.03: tips.append('The light kept changing. Screens and moving shadows can do that.')
+        if not tips: tips.append('The signal was weak. More light, holding the phone a bit closer and keeping still all help.')
     return tips
 
 # ---------------------------------------------------------------- main entry
@@ -73,7 +73,7 @@ def analyze(video_path, models):
         shutil.rmtree(workdir, ignore_errors=True)
     W, S = fv.WIN_SEC * FPS, fv.STRIDE_SEC * FPS
     if len(frames) < W:
-        return {'ok': False, 'message': f'The video is too short. Please record at least {fv.WIN_SEC} seconds '
+        return {'ok': False, 'message': f'That video is too short. We need at least {fv.WIN_SEC} seconds '
                                          f'(this one is {len(frames) / FPS:.1f} s).'}
     rows = []
     for s in range(0, len(frames) - W + 1, S):
@@ -105,5 +105,5 @@ def analyze(video_path, models):
                       'flicker': bool(r.flicker_flag)} for r in df.itertuples()],
     }
     if not len(acc):
-        result['message'] = "We couldn't get a reliable reading from this video."
+        result['message'] = "We couldn't get a reading we trust from this video."
     return result
