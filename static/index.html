@@ -255,11 +255,53 @@
       padding: 16px 16px 48px;
     }
 
+    /* The card stays white, with a slowly turning gold-and-green border, a halo so it seems to float
+       in space, a faint pearly sheen and star dust inside, and a small orbit in the top-right corner. */
+    @property --angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+    @keyframes turn { to { --angle: 360deg; } }
+
     .instruction {
+      position: relative;
+      isolation: isolate;
       padding: 28px;
-      border: 3px solid var(--ink);
+      border: 3px solid transparent;
       border-radius: 10px;
-      background: var(--card);
+      background:
+        linear-gradient(var(--card), var(--card)) padding-box,
+        conic-gradient(from var(--angle), #C9AE7B, #F6E9CC, #2F6B4F, #C9AE7B 50%, #F6E9CC, #7FA894, #C9AE7B) border-box;
+      box-shadow:
+        0 0 28px rgba(201, 174, 123, 0.35),
+        0 0 90px rgba(127, 168, 148, 0.18),
+        0 24px 60px rgba(0, 0, 0, 0.45);
+      animation: turn 12s linear infinite;
+    }
+
+    .instruction::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      pointer-events: none;
+      background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%23C9AE7B'%3E%3Cellipse cx='200' cy='60' rx='150' ry='54' transform='rotate%28-24 200 60%29' stroke-opacity='0.55' stroke-width='1.2'/%3E%3Cellipse cx='200' cy='60' rx='100' ry='34' transform='rotate%28-24 200 60%29' stroke-opacity='0.4' stroke-dasharray='2 5'/%3E%3C/g%3E%3Ccircle cx='200' cy='60' r='5' fill='%23C9AE7B' fill-opacity='0.45'/%3E%3C/svg%3E") right -60px top -70px / 260px 260px no-repeat,
+        radial-gradient(1.5px 1.5px at 7% 88%, rgba(16, 32, 29, 0.35), transparent),
+        radial-gradient(1px 1px at 14% 12%, rgba(16, 32, 29, 0.3), transparent),
+        radial-gradient(1.5px 1.5px at 47% 6%, rgba(168, 141, 92, 0.6), transparent),
+        radial-gradient(1px 1px at 63% 94%, rgba(16, 32, 29, 0.3), transparent),
+        radial-gradient(2px 2px at 92% 82%, rgba(168, 141, 92, 0.55), transparent),
+        radial-gradient(1px 1px at 97% 45%, rgba(16, 32, 29, 0.3), transparent),
+        radial-gradient(ellipse 55% 45% at 0% 0%, rgba(201, 174, 123, 0.16), transparent 70%),
+        radial-gradient(ellipse 50% 40% at 100% 100%, rgba(127, 168, 148, 0.14), transparent 70%),
+        radial-gradient(ellipse 35% 30% at var(--pearl, 70%) 30%, rgba(246, 233, 204, 0.5), transparent 70%);
+      animation: pearl 16s ease-in-out infinite alternate;
+    }
+
+    @property --pearl { syntax: "<percentage>"; inherits: false; initial-value: 70%; }
+    @keyframes pearl { from { --pearl: 20%; } to { --pearl: 80%; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .instruction, .instruction::before { animation: none; }
     }
 
     p {
