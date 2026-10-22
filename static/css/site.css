@@ -1058,19 +1058,40 @@ html.intro-on body > :not(#intro) { visibility: hidden; animation: intro-failsaf
   position: absolute;
   left: 0;
   right: 0;
-  top: 66%;
+  top: 70%;
   padding: 0 16px;
   text-align: center;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 1.4s ease, transform 1.4s ease;
   pointer-events: none;
 }
 
-.intro-title.show { opacity: 1; transform: none; }
-.intro-title.gone { opacity: 0; transition-duration: 0.5s; }
-.intro-title h1 { font-size: clamp(2em, 6vw, 3.4em); letter-spacing: 0.04em; text-shadow: 0 0 24px rgba(246, 233, 204, 0.55), 0 2px 6px rgba(0, 0, 0, 0.6); }
-.intro-title p { margin: 10px 0 0; color: rgba(246, 233, 204, 0.85); font-weight: 300; font-size: clamp(0.95em, 2.4vw, 1.15em); }
+.intro-l1, .intro-l2 {
+  opacity: 0;
+  transform: translateY(12px);
+  filter: blur(6px);
+  transition: opacity 1.8s ease, transform 1.8s ease, filter 1.8s ease, letter-spacing 3s ease;
+}
+
+.intro-l1 {
+  margin: 0;
+  font-weight: 300;
+  font-size: clamp(1em, 2.6vw, 1.35em);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(246, 233, 204, 0.85);
+}
+
+.intro-l2 {
+  margin: 8px 0 0;
+  font-weight: 600;
+  font-size: clamp(2.4em, 7vw, 4.2em);
+  letter-spacing: 0.22em;
+  color: #FFF6E6;
+  text-shadow: 0 0 30px rgba(255, 214, 150, 0.6), 0 0 80px rgba(201, 174, 123, 0.35);
+}
+
+.intro-l1.show, .intro-l2.show { opacity: 1; transform: none; filter: none; }
+.intro-l2.show { letter-spacing: 0.06em; }
+.intro-l1.gone, .intro-l2.gone { opacity: 0; transition-duration: 0.8s; }
 
 .intro-skip {
   position: absolute;

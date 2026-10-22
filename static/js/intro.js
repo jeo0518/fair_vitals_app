@@ -1,8 +1,9 @@
-// First-visit intro: a first-person flight through space. The ship accelerates to warp speed, stops
-// dead, and a heart-shaped planet beats in front of you; then the site fades in. Drawn live on a canvas
-// (no video file). The small script in each page's <head> adds html.intro-on for first-time visitors (or
-// when the address has ?intro), which hides the page until this finishes. Skip button and Esc skip it;
-// with reduced motion it never plays.
+// First-visit intro: a first-person flight through space. You drift through a nebula, accelerate to warp
+// speed, stop dead, and in the silence a transparent golden heart beats in front of you; "We invited you
+// to Fair Vitals" appears and the site fades in. Drawn live on a canvas (no video file), about 20 seconds.
+// The small script in each page's <head> adds html.intro-on for first-time visitors (or when the address
+// has ?intro), which hides the page until this finishes. Skip button and Esc skip it; with reduced motion
+// it never plays.
 (() => {
   const root = document.documentElement, KEY = 'fv-intro-seen';
   if (!root.classList.contains('intro-on')) return;
@@ -11,17 +12,18 @@
 
   // ---------------------------------------------------------------- timeline (seconds)
   const T = {
-    fadeIn: 0.8,          // black to cockpit
-    warpFrom: 0.9,        // start accelerating
-    warpFull: 3.6,        // top speed
-    stop: 4.4,            // brakes: speed falls to nothing in STOP_LEN
-    heart: 4.9,           // planet comes into view...
-    heartNear: 8.0,       // ...and has drifted close
-    title: 7.0,           // "Fair Vitals" fades in
-    flash: 9.6,           // last heartbeat floods the screen with light
-    end: 10.3,            // the page appears
+    fadeIn: 2.2,          // black to space; the widescreen bars slide in
+    warpFrom: 3.6,        // start accelerating...
+    warpFull: 8.0,        // ...to full warp
+    stop: 8.9,            // the brakes: speed falls to nothing in STOP_LEN
+    heart: 10.2,          // a glow ahead becomes the heart...
+    heartNear: 15.5,      // ...which drifts close
+    line1: 14.6,          // "We invited you to"
+    line2: 15.8,          // "Fair Vitals"
+    bloom: 18.7,          // the last heartbeat floods the screen with light
+    end: 19.9,            // the page appears
   };
-  const STOP_LEN = 0.28, BPM = 66, BEAT = 60 / BPM;
+  const STOP_LEN = 0.35, BPM = 60, BEAT = 60 / BPM;
 
   // ---------------------------------------------------------------- overlay
   const box = document.createElement('div');
@@ -29,274 +31,357 @@
   box.setAttribute('role', 'dialog');
   box.setAttribute('aria-label', 'Intro animation');
   box.innerHTML = '<canvas aria-hidden="true"></canvas>'
-    + '<div class="intro-title"><h1>Fair Vitals</h1><p>Your heart rate, from a 30-second selfie video.</p></div>'
+    + '<div class="intro-title"><p class="intro-l1">We invited you to</p><h1 class="intro-l2">Fair Vitals</h1></div>'
     + '<button class="intro-skip" type="button">Skip</button>';
   document.body.prepend(box);
   const canvas = box.querySelector('canvas'), ctx = canvas.getContext('2d');
-  const title = box.querySelector('.intro-title'), skip = box.querySelector('.intro-skip');
+  const line1 = box.querySelector('.intro-l1'), line2 = box.querySelector('.intro-l2'), skip = box.querySelector('.intro-skip');
 
-  let W, H, R, dpr;
+  let W, H, R, dpr, nebula, vignette;
   function resize() {
     dpr = Math.min(devicePixelRatio || 1, 2);
     W = innerWidth; H = innerHeight; R = Math.min(W, H);
     canvas.width = W * dpr; canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    nebula = makeNebula();
+    vignette = makeVignette();
   }
-  resize();
-  addEventListener('resize', resize);
 
   // ---------------------------------------------------------------- helpers
   const clamp01 = v => Math.max(0, Math.min(1, v));
-  const ease = v => v * v * (3 - 2 * v);                         // smoothstep
+  const smooth = v => v * v * (3 - 2 * v);
   const easeOut = v => 1 - Math.pow(1 - v, 3);
+  const easeInOut = v => (v < 0.5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2);
   const lerp = (a, b, v) => a + (b - a) * v;
   const span = (t, a, b) => clamp01((t - a) / (b - a));
+  let seed = 7;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);   // repeatable, so the sky is the same every time
 
-  /** Ship speed, 0..1. */
-  function speed(t) {
-    if (t < T.warpFrom) return 0.02;
-    if (t < T.warpFull) return lerp(0.02, 1, Math.pow(span(t, T.warpFrom, T.warpFull), 2.2));
-    if (t < T.stop) return 1;
-    return lerp(1, 0.004, easeOut(span(t, T.stop, T.stop + STOP_LEN)));
+  /** A soft round glow, drawn once and reused (much cheaper than shadows). */
+  function sprite(rgb, size = 64) {
+    const c = document.createElement('canvas'); c.width = c.height = size;
+    const g = c.getContext('2d'), grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    grad.addColorStop(0, `rgba(${rgb},1)`); grad.addColorStop(0.25, `rgba(${rgb},0.45)`); grad.addColorStop(1, `rgba(${rgb},0)`);
+    g.fillStyle = grad; g.fillRect(0, 0, size, size);
+    return c;
   }
+  const GOLD = sprite('255,214,140'), WHITE = sprite('255,250,240'), TEAL = sprite('150,215,195');
 
-  // stars in a box in front of the ship: x, y in -1..1, depth z in 0..1 (0 = at the window)
-  const STAR_TINTS = ['255,255,255', '246,233,204', '201,174,123', '190,222,208'];
-  const stars = Array.from({ length: 1400 }, () => newStar(Math.random()));
-  function newStar(z) {
-    return { x: (Math.random() - 0.5) * 2.4, y: (Math.random() - 0.5) * 2.4, z, c: STAR_TINTS[Math.random() * 4 | 0] };
-  }
-
-  // ---------------------------------------------------------------- the heart planet
-  function heartPath(cx, cy, r) {
-    const s = r / 16.5;
-    ctx.beginPath();
-    for (let i = 0; i <= 120; i++) {
-      const a = i / 120 * Math.PI * 2, sa = Math.sin(a);
-      const x = 16 * sa * sa * sa;
-      const y = 13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a);
-      const px = cx + x * s, py = cy - (y - 2.5) * s;          // shift so the shape is centred on (cx, cy)
-      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+  /** Faint clouds of gold and green gas, painted once per screen size. */
+  function makeNebula() {
+    const c = document.createElement('canvas'), s = 0.5;          // half resolution: it's blurry anyway
+    c.width = Math.ceil(W * 1.4 * s); c.height = Math.ceil(H * 1.4 * s);
+    const g = c.getContext('2d'), cw = c.width, ch = c.height;
+    seed = 11;
+    const clouds = [['201,174,123', 0.10], ['47,107,79', 0.16], ['127,168,148', 0.08], ['180,110,90', 0.05]];
+    for (let i = 0; i < 26; i++) {
+      const [rgb, a] = clouds[i % clouds.length], x = rand() * cw, y = ch * (0.15 + rand() * 0.7), r = (0.12 + rand() * 0.3) * Math.max(cw, ch);
+      const grad = g.createRadialGradient(x, y, 0, x, y, r);
+      grad.addColorStop(0, `rgba(${rgb},${a})`); grad.addColorStop(1, `rgba(${rgb},0)`);
+      g.fillStyle = grad; g.fillRect(0, 0, cw, ch);
     }
-    ctx.closePath();
+    for (let i = 0; i < 900; i++) {                                // far-away stars baked into the clouds
+      g.fillStyle = `rgba(255,248,235,${0.15 + rand() * 0.5})`;
+      const big = rand() < 0.08;
+      g.fillRect(rand() * cw, rand() * ch, big ? 1.5 : 0.8, big ? 1.5 : 0.8);
+    }
+    return c;
   }
 
+  /** Dark edges, like a film frame; painted once per screen size. */
+  function makeVignette() {
+    const c = document.createElement('canvas'), s = 0.5;
+    c.width = Math.ceil(W * s); c.height = Math.ceil(H * s);
+    const g = c.getContext('2d'), vg = g.createRadialGradient(c.width / 2, c.height / 2, R * s * 0.3, c.width / 2, c.height / 2, Math.hypot(c.width, c.height) * 0.55);
+    vg.addColorStop(0, 'rgba(1,4,3,0)'); vg.addColorStop(1, 'rgba(1,4,3,0.75)');
+    g.fillStyle = vg; g.fillRect(0, 0, c.width, c.height);
+    return c;
+  }
+
+  // ---------------------------------------------------------------- the ship's motion
+  /** Speed, 0..1. */
+  function speed(t) {
+    if (t < T.warpFrom) return 0.035;
+    if (t < T.warpFull) return lerp(0.035, 1, Math.pow(span(t, T.warpFrom, T.warpFull), 2.4));
+    if (t < T.stop) return 1;
+    return lerp(1, 0.003, easeOut(span(t, T.stop, T.stop + STOP_LEN)));
+  }
+
+  // stars in a box ahead: x, y in -1.2..1.2, depth z in 0..1 (0 = right in front of you)
+  const TINTS = ['255,255,255', '255,240,214', '232,206,150', '190,222,208', '170,200,255'];
+  seed = 3;
+  const newStar = z => ({ x: (rand() - 0.5) * 2.4, y: (rand() - 0.5) * 2.4, z, ci: rand() * TINTS.length | 0 });
+  const stars = Array.from({ length: 1500 }, () => newStar(rand()));
+  const BANDS = 5, starPaths = Array.from({ length: TINTS.length * BANDS }, () => []);   // line ends per colour and depth band
+  const newDust = z => ({ x: (rand() - 0.5) * 1.6, y: (rand() - 0.5) * 1.6, z, s: 0.5 + rand() });
+  const dust = Array.from({ length: 70 }, () => newDust(rand()));
+
+  // golden specks circling the heart; each beat pushes them outward a little
+  const motes = Array.from({ length: 170 }, () => ({ a: rand() * 6.283, r: 0.75 + rand() * 1.5, tilt: (rand() - 0.5) * 0.9,
+                                                     sp: (0.08 + rand() * 0.18) * (rand() < 0.5 ? 1 : -1), s: 0.4 + rand() * 1.1 }));
+
+  // ---------------------------------------------------------------- the heart
   /** Strength of the heartbeat now: a strong "lub" then a softer "dub". 0..1 */
   function beat(t) {
-    const p = (t % BEAT) / BEAT, g = (x, w) => Math.exp(-(x / w) * (x / w));
-    return Math.max(g(p, 0.045), 0.6 * g(p - 0.19, 0.045), g(p - 1, 0.045));
+    const p = ((t - T.heart) % BEAT + BEAT) % BEAT / BEAT, g = (x, w) => Math.exp(-(x / w) * (x / w));
+    return Math.max(g(p, 0.05), 0.6 * g(p - 0.2, 0.05), g(p - 1, 0.05));
   }
 
-  function drawRing(cx, cy, r, front, alpha) {
-    ctx.save();
+  // In heart units: about 400 tall, centred near (0, 0). Front view: the apex points down and to the right.
+  function ventricles() {
     ctx.beginPath();
-    ctx.ellipse(cx, cy, r * 1.85, r * 0.42, -0.32, front ? 0 : Math.PI, front ? Math.PI : Math.PI * 2);
-    ctx.strokeStyle = `rgba(201,174,123,${0.75 * alpha})`;
-    ctx.lineWidth = Math.max(1.2, r * 0.035);
-    ctx.shadowColor = 'rgba(246,233,204,0.8)';
-    ctx.shadowBlur = r * 0.12;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, r * 2.1, r * 0.5, -0.32, front ? 0 : Math.PI, front ? Math.PI : Math.PI * 2);
-    ctx.strokeStyle = `rgba(201,174,123,${0.3 * alpha})`;
-    ctx.lineWidth = Math.max(1, r * 0.012);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function drawHeart(t, cx, cy, r, alpha) {
-    const b = beat(t), rr = r * (1 + 0.075 * b);
-
-    // a ripple leaves the planet on every "lub"
-    const age = (t % BEAT) / BEAT;
-    ctx.save();
-    ctx.globalAlpha = alpha * (1 - age) * 0.55;
-    heartPath(cx, cy, rr * (1 + age * 1.6));
-    ctx.strokeStyle = 'rgba(246,233,204,0.9)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.restore();
-
-    // glow around it, stronger on each beat
-    const glow = ctx.createRadialGradient(cx, cy, rr * 0.3, cx, cy, rr * 2.6);
-    glow.addColorStop(0, `rgba(214,96,80,${(0.35 + 0.35 * b) * alpha})`);
-    glow.addColorStop(0.45, `rgba(201,174,123,${0.12 * alpha})`);
-    glow.addColorStop(1, 'rgba(201,174,123,0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(cx - rr * 2.6, cy - rr * 2.6, rr * 5.2, rr * 5.2);
-
-    drawRing(cx, cy, rr, false, alpha);                         // back half of the ring, behind the planet
-
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    heartPath(cx, cy, rr);
-    ctx.save();
-    ctx.clip();
-    // lit from the upper left like a planet: highlight, body, and a dark night side to the lower right
-    const body = ctx.createRadialGradient(cx - rr * 0.45, cy - rr * 0.5, rr * 0.05, cx, cy, rr * 1.35);
-    body.addColorStop(0, '#F7CDB0');
-    body.addColorStop(0.25, '#D8645A');
-    body.addColorStop(0.6, '#9E2F35');
-    body.addColorStop(1, '#3A0B14');
-    ctx.fillStyle = body;
-    ctx.fillRect(cx - rr * 1.5, cy - rr * 1.5, rr * 3, rr * 3);
-    // cloud bands drifting across the surface
-    ctx.lineWidth = rr * 0.05;
-    for (let i = -4; i <= 4; i++) {
-      ctx.beginPath();
-      for (let x = -1.3; x <= 1.3; x += 0.05) {
-        const y = i * 0.22 + 0.05 * Math.sin(x * 4 + i * 1.7 + t * 0.35);
-        const px = cx + x * rr, py = cy + y * rr;
-        x === -1.3 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-      }
-      ctx.strokeStyle = i % 2 ? 'rgba(255,214,190,0.10)' : 'rgba(58,11,20,0.16)';
-      ctx.stroke();
-    }
-    // the night side and a bright rim where the light catches the edge
-    const night = ctx.createLinearGradient(cx - rr, cy - rr, cx + rr, cy + rr);
-    night.addColorStop(0.45, 'rgba(10,4,8,0)');
-    night.addColorStop(1, 'rgba(10,4,8,0.65)');
-    ctx.fillStyle = night;
-    ctx.fillRect(cx - rr * 1.5, cy - rr * 1.5, rr * 3, rr * 3);
-    ctx.restore();
-    heartPath(cx, cy, rr);                                       // (the bands replaced the path) the bright rim
-    ctx.strokeStyle = `rgba(255,224,200,${0.35 + 0.4 * b})`;
-    ctx.lineWidth = Math.max(1, rr * 0.018);
-    ctx.shadowColor = 'rgba(255,180,150,0.9)';
-    ctx.shadowBlur = rr * (0.15 + 0.25 * b);
-    ctx.stroke();
-    ctx.restore();
-
-    drawRing(cx, cy, rr, true, alpha);                          // front half of the ring, over the planet
-  }
-
-  // ---------------------------------------------------------------- the cockpit
-  /** The window frame you look through, plus a small readout. Drawn over everything. */
-  function drawCockpit(t, v, alpha) {
-    const pts = [[0.07, 0.1], [0.93, 0.1], [0.985, 0.5], [0.9, 0.93], [0.1, 0.93], [0.015, 0.5]];
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.beginPath();
-    ctx.rect(0, 0, W, H);
-    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * W, y * H) : ctx.moveTo(x * W, y * H)));
+    ctx.moveTo(-70, -12);
+    ctx.bezierCurveTo(-86, 42, -55, 98, 24, 128);
+    ctx.bezierCurveTo(58, 142, 86, 112, 89, 70);
+    ctx.bezierCurveTo(93, 24, 80, -26, 55, -46);
+    ctx.bezierCurveTo(30, -61, -10, -56, -30, -46);
+    ctx.bezierCurveTo(-50, -39, -62, -31, -70, -12);
     ctx.closePath();
-    ctx.fillStyle = '#020605';
-    ctx.fill('evenodd');
-    // gold edge of the window
-    ctx.beginPath();
-    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * W, y * H) : ctx.moveTo(x * W, y * H)));
-    ctx.closePath();
-    ctx.strokeStyle = 'rgba(201,174,123,0.45)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    // inner shadow so the glass has some depth
-    const vg = ctx.createRadialGradient(W / 2, H / 2, R * 0.35, W / 2, H / 2, Math.max(W, H) * 0.65);
-    vg.addColorStop(0, 'rgba(2,6,5,0)');
-    vg.addColorStop(1, 'rgba(2,6,5,0.7)');
-    ctx.fillStyle = vg;
-    ctx.fillRect(0, 0, W, H);
-    // readout in the lower left of the window
-    const x = W * 0.12, y = H * 0.86, small = Math.max(10, Math.round(R * 0.018));
-    ctx.font = `600 ${small}px Inter, system-ui, sans-serif`;
-    ctx.fillStyle = 'rgba(201,174,123,0.75)';
-    ctx.fillText('SPEED', x, y - small * 1.6);
-    ctx.font = `500 ${Math.round(small * 1.5)}px Inter, system-ui, sans-serif`;
-    ctx.fillStyle = 'rgba(246,233,204,0.9)';
-    ctx.fillText(`${(v * 0.99).toFixed(2)} c`, x, y);
-    ctx.fillStyle = 'rgba(201,174,123,0.25)';
-    ctx.fillRect(x, y + small * 0.7, small * 9, 2);
-    ctx.fillStyle = 'rgba(246,233,204,0.85)';
-    ctx.fillRect(x, y + small * 0.7, small * 9 * v, 2);
-    if (t > T.heart + 0.6) {                                    // the heartbeat shows up on the readout
-      const a = clamp01((t - T.heart - 0.6) / 0.6);
-      ctx.globalAlpha = alpha * a;
-      ctx.textAlign = 'right';
-      ctx.font = `600 ${small}px Inter, system-ui, sans-serif`;
-      ctx.fillStyle = 'rgba(201,174,123,0.75)';
-      ctx.fillText('SIGNAL', W * 0.88, y - small * 1.6);
-      ctx.font = `500 ${Math.round(small * 1.5)}px Inter, system-ui, sans-serif`;
-      ctx.fillStyle = `rgba(246,233,204,${0.55 + 0.45 * beat(t)})`;
-      ctx.fillText(`${BPM} BPM`, W * 0.88, y);
+  }
+  const VESSELS = [
+    // [path, width, behind the heart?]
+    [() => { ctx.moveTo(-74, -55); ctx.bezierCurveTo(-74, -95, -70, -125, -68, -160); }, 24, false],           // superior vena cava
+    [() => { ctx.moveTo(-78, 18); ctx.lineTo(-84, 58); }, 22, true],                                            // inferior vena cava
+    [() => { ctx.moveTo(-10, -86); ctx.bezierCurveTo(-40, -92, -70, -92, -96, -86); }, 15, true],              // right pulmonary artery
+    [() => { ctx.moveTo(-8, -46); ctx.lineTo(-10, -96); ctx.bezierCurveTo(-10, -152, 58, -156, 62, -106); ctx.lineTo(64, -58); }, 26, false], // aorta
+    [() => { ctx.moveTo(6, -138); ctx.bezierCurveTo(2, -158, 0, -175, -4, -196); }, 11, false],                // brachiocephalic artery
+    [() => { ctx.moveTo(24, -146); ctx.bezierCurveTo(24, -165, 26, -182, 28, -200); }, 9, false],              // left common carotid
+    [() => { ctx.moveTo(42, -140); ctx.bezierCurveTo(48, -160, 56, -176, 64, -192); }, 10, false],             // left subclavian
+    [() => { ctx.moveTo(14, -44); ctx.bezierCurveTo(22, -62, 30, -78, 36, -92); }, 24, false],                 // pulmonary trunk
+    [() => { ctx.moveTo(36, -92); ctx.bezierCurveTo(56, -100, 80, -100, 104, -94); }, 14, false],              // left pulmonary artery
+  ];
+  const CORONARY = [
+    () => { ctx.moveTo(22, -46); ctx.bezierCurveTo(34, 0, 40, 60, 48, 122); },                                 // down the front groove to the apex
+    () => { ctx.moveTo(30, 0); ctx.bezierCurveTo(48, 10, 64, 24, 78, 44); },
+    () => { ctx.moveTo(38, 52); ctx.bezierCurveTo(54, 62, 68, 76, 80, 96); },
+    () => { ctx.moveTo(34, 20); ctx.bezierCurveTo(16, 34, 4, 50, -6, 70); },
+    () => { ctx.moveTo(-18, -48); ctx.bezierCurveTo(-56, -26, -66, 20, -40, 78); },                           // right coronary artery
+    () => { ctx.moveTo(-56, 2); ctx.bezierCurveTo(-36, 12, -20, 22, -6, 40); },
+    () => { ctx.moveTo(-50, 48); ctx.bezierCurveTo(-30, 60, -10, 78, 6, 104); },
+  ];
+
+  function stroke(pathFn, width, color) {
+    ctx.beginPath(); pathFn(); ctx.lineWidth = width; ctx.strokeStyle = color; ctx.stroke();
+  }
+
+  /** A see-through golden blood vessel: a faint body, a shine down one side and a darker edge down the other. */
+  function vessel(pathFn, w, a) {
+    stroke(pathFn, w, `rgba(255,200,120,${0.10 * a})`);
+    stroke(pathFn, w * 0.62, `rgba(255,214,150,${0.08 * a})`);
+    ctx.save(); ctx.translate(-w * 0.22, -w * 0.12);
+    stroke(pathFn, 1.3, `rgba(255,236,196,${0.55 * a})`);
+    ctx.restore();
+    ctx.save(); ctx.translate(w * 0.3, w * 0.15);
+    stroke(pathFn, 1, `rgba(232,190,120,${0.35 * a})`);
+    ctx.restore();
+  }
+
+  function drawHeart(t, cx, cy, size, alpha) {
+    const b = beat(t), k = size / 400;
+    ctx.save();
+    ctx.translate(cx, cy + size * 0.08);
+    ctx.rotate(0.12 * Math.sin(t * 0.21) - 0.06);                  // a slow turn and sway, as if floating
+    ctx.scale(k * (0.9 + 0.08 * Math.cos(t * 0.33)), k);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+    for (const [p, w, behind] of VESSELS) if (behind) vessel(p, w, alpha * 0.55);
+
+    // the ventricles swell on each beat (from their centre), the vessels much less
+    ctx.save();
+    ctx.translate(10, 40); ctx.scale(1 + 0.07 * b, 1 + 0.06 * b); ctx.translate(-10, -40);
+    const body = ctx.createRadialGradient(-20, -10, 10, 10, 30, 150);
+    body.addColorStop(0, `rgba(255,226,170,${0.30 * alpha})`);
+    body.addColorStop(0.5, `rgba(214,170,90,${0.12 * alpha})`);
+    body.addColorStop(1, `rgba(255,205,120,${0.26 * alpha})`);    // brighter at the edge, like glass
+    ventricles(); ctx.fillStyle = body; ctx.fill();
+    // the atria: the right one at the viewer's left, the left one's small ear at the upper right
+    ctx.beginPath(); ctx.ellipse(-74, -30, 30, 38, -0.2, 0, 6.283);
+    ctx.fillStyle = `rgba(255,214,150,${0.10 * alpha})`; ctx.fill();
+    ctx.strokeStyle = `rgba(255,226,180,${0.45 * alpha})`; ctx.lineWidth = 1.4; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(70, -44, 20, 11, -0.5, 0, 6.283);
+    ctx.fillStyle = `rgba(255,214,150,${0.12 * alpha})`; ctx.fill(); ctx.stroke();
+    // what you can see through the glass: the wall between the chambers and two valve rings
+    ctx.setLineDash([3, 5]);
+    stroke(() => { ctx.moveTo(14, -40); ctx.bezierCurveTo(8, 10, 20, 70, 40, 118); }, 1.2, `rgba(255,226,180,${0.30 * alpha})`);
+    ctx.setLineDash([]);
+    for (const [x, y, rx, ry] of [[-28, -26, 18, 8], [30, -30, 16, 7]]) {
+      ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0.2, 0, 6.283);
+      ctx.strokeStyle = `rgba(255,226,180,${0.28 * alpha})`; ctx.lineWidth = 1.2; ctx.stroke();
     }
+    // a bright rim, brighter on the beat
+    ventricles();
+    ctx.strokeStyle = `rgba(255,232,190,${(0.65 + 0.35 * b) * alpha})`; ctx.lineWidth = 2.2; ctx.stroke();
+    ctx.strokeStyle = `rgba(255,200,120,${0.18 * alpha})`; ctx.lineWidth = 9; ctx.stroke();
+    // the coronary arteries on the surface
+    for (const p of CORONARY) stroke(p, 2, `rgba(255,236,200,${(0.45 + 0.4 * b) * alpha})`);
+    ctx.restore();
+
+    for (const [p, w, behind] of VESSELS) if (!behind) vessel(p, w, alpha);
+    // the open ends of the vessels, seen as rings
+    for (const [x, y, rx] of [[-68, -160, 12], [-4, -196, 5.5], [28, -200, 4.5], [64, -192, 5], [104, -94, 7], [-96, -86, 7]]) {
+      ctx.beginPath(); ctx.ellipse(x, y, rx, rx * 0.45, 0, 0, 6.283);
+      ctx.strokeStyle = `rgba(255,230,190,${0.5 * alpha})`; ctx.lineWidth = 1.2; ctx.stroke();
+    }
+
+    // sparkles drifting over the surface
+    for (let i = 0; i < 14; i++) {
+      const u = (i * 0.618 + t * 0.05) % 1, x = -60 + 140 * ((i * 0.37) % 1), y = -40 + 160 * u;
+      const s = 6 + 10 * Math.max(0, Math.sin(t * 2 + i));
+      ctx.globalAlpha = 0.5 * alpha * Math.sin(u * Math.PI);
+      ctx.drawImage(WHITE, x - s / 2, y - s / 2, s, s);
+    }
+    ctx.globalAlpha = 1;
     ctx.restore();
   }
 
   // ---------------------------------------------------------------- one frame
-  let clock = 0, last = performance.now(), done = false;
+  let clock = 0, last = performance.now(), done = false, roll = 0, beatsSeen = 0, push = 0, stopped = false;
+  let frameTime = 1 / 60, lite = false;                             // lite: half the stars and no dust, for slow computers
+  const waves = [];                                                 // rings sent out by the stop and by each beat
+
   function frame(now) {
     if (done) return;
-    const dt = Math.min((now - last) / 1000, 0.05);             // a background tab doesn't skip the show
-    clock += dt;
-    last = now;
+    const dt = Math.min((now - last) / 1000, 0.05);                 // a background tab doesn't skip the show
+    clock += dt; last = now;
     const t = clock, v = speed(t);
+    frameTime += (dt - frameTime) * 0.05;
+    if (!lite && t > 2 && frameTime > 0.028) lite = true;          // can't keep up (under ~35 frames a second): draw less
 
-    // shake: rises with speed, kicks hard at the stop, then settles
-    const kick = Math.exp(-Math.max(0, t - T.stop) * 7) * (t > T.stop ? 1 : 0);
-    const shake = R * (0.0025 * v * v + 0.012 * kick);
-    const cx = W / 2 + (Math.random() - 0.5) * shake, cy = H / 2 + (Math.random() - 0.5) * shake;
-    const f = R * 0.55;
+    // camera: shakes with speed, jolts at the stop, rolls a little at warp, then floats
+    const kick = t > T.stop ? Math.exp(-(t - T.stop) * 5) : 0;
+    const shake = R * (0.003 * v * v + 0.016 * kick);
+    roll += dt * v * v * 0.35;
+    const cx = W / 2 + (Math.random() - 0.5) * shake + Math.sin(t * 0.4) * R * 0.006;
+    const cy = H / 2 + (Math.random() - 0.5) * shake + Math.cos(t * 0.31) * R * 0.005;
+    const fov = R * lerp(0.62, 0.42, v);                            // the view widens as you speed up
 
-    ctx.fillStyle = '#020605';
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#010403';
     ctx.fillRect(0, 0, W, H);
 
-    // light ahead of the ship at full speed
-    if (v > 0.2) {
-      const tunnel = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.6);
-      tunnel.addColorStop(0, `rgba(246,233,204,${0.22 * v})`);
-      tunnel.addColorStop(0.4, `rgba(127,168,148,${0.08 * v})`);
-      tunnel.addColorStop(1, 'rgba(2,6,5,0)');
-      ctx.fillStyle = tunnel;
-      ctx.fillRect(0, 0, W, H);
+    // nebula: drifts slowly, rushes past and dims at warp, settles after the stop
+    const nz = 1 + 0.25 * v + 0.04 * Math.sin(t * 0.1);
+    ctx.globalAlpha = lerp(1, 0.55, v);
+    ctx.drawImage(nebula, cx - W * 0.7 * nz, cy - H * 0.7 * nz, W * 1.4 * nz, H * 1.4 * nz);
+    ctx.globalAlpha = 1;
+
+    ctx.globalCompositeOperation = 'lighter';
+    // light ahead of you at warp
+    if (v > 0.15) {
+      const s = R * (0.4 + 1.1 * v);
+      ctx.globalAlpha = 0.5 * v * v; ctx.drawImage(WHITE, cx - s / 2, cy - s / 2, s, s);
+      ctx.globalAlpha = 0.35 * v; ctx.drawImage(TEAL, cx - s * 0.6, cy - s * 0.6, s * 1.2, s * 1.2);
+      ctx.globalAlpha = 1;
     }
 
-    // stars: streaks at speed, points when still
-    const dz = (v * 1.4 + 0.012) * dt;                          // depth travelled this frame
-    ctx.lineCap = 'round';
-    for (const s of stars) {
+    // stars: points while drifting, long streaks at warp. Drawn in batches (one path per colour and
+    // depth band) instead of one line at a time, which keeps warp smooth on slower computers.
+    const dz = (v * 1.5 + 0.01) * dt, cr = Math.cos(roll), sr = Math.sin(roll);
+    for (const path of starPaths) path.length = 0;
+    for (let i = 0; i < stars.length; i++) {
+      const s = stars[i];
       s.z -= dz;
-      if (s.z <= 0.03) Object.assign(s, newStar(1));
-      const px = cx + s.x / s.z * f * 0.5, py = cy + s.y / s.z * f * 0.5;
-      if (px < -50 || px > W + 50 || py < -50 || py > H + 50) continue;
-      const near = 1 - s.z, a = Math.min(1, near * 1.4);
-      const tz = Math.min(1, s.z * (1 + v * 0.9) + v * 0.05);     // tail: none when still, long at warp
-      const tx = cx + s.x / tz * f * 0.5, ty = cy + s.y / tz * f * 0.5;
-      ctx.strokeStyle = `rgba(${s.c},${a})`;
-      ctx.lineWidth = 0.6 + near * 1.8;
-      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(px + 0.01, py); ctx.stroke();
+      if (s.z <= 0.025) Object.assign(s, newStar(1));
+      if (lite && i & 1) continue;
+      const x = s.x * cr - s.y * sr, y = s.x * sr + s.y * cr;
+      const px = cx + x / s.z * fov * 0.5, py = cy + y / s.z * fov * 0.5;
+      if (px < -60 || px > W + 60 || py < -60 || py > H + 60) continue;
+      const tz = Math.min(1, s.z * (1 + v * 1.1) + v * 0.06);       // tail: none when still, long at warp
+      const band = Math.min(BANDS - 1, (1 - s.z) * BANDS | 0);
+      starPaths[s.ci * BANDS + band].push(cx + x / tz * fov * 0.5, cy + y / tz * fov * 0.5, px + 0.01, py);
     }
+    ctx.globalCompositeOperation = 'source-over';                    // plain blending: looks the same on black, draws faster
+    ctx.lineCap = 'round';
+    const twinkle = 0.9 + 0.1 * Math.sin(t * 3);
+    starPaths.forEach((path, i) => {
+      if (!path.length) return;
+      const band = i % BANDS, near = (band + 0.5) / BANDS;
+      ctx.strokeStyle = `rgba(${TINTS[i / BANDS | 0]},${Math.min(1, near * 1.5) * twinkle})`;
+      ctx.lineWidth = 0.5 + near * near * 2;
+      ctx.beginPath();
+      for (let j = 0; j < path.length; j += 4) { ctx.moveTo(path[j], path[j + 1]); ctx.lineTo(path[j + 2], path[j + 3]); }
+      ctx.stroke();
+    });
+    ctx.globalCompositeOperation = 'lighter';
+    // big soft dust rushing past close by
+    for (const d of lite ? [] : dust) {
+      d.z -= dz * 1.4;
+      if (d.z <= 0.05) Object.assign(d, newDust(1));
+      const px = cx + d.x / d.z * fov * 0.5, py = cy + d.y / d.z * fov * 0.5, s = Math.min(R * 0.12, d.s * R * 0.05 * (1 - d.z) * (1 + 3 * v));
+      ctx.globalAlpha = 0.18 * (1 - d.z) * (0.3 + v);
+      ctx.drawImage(GOLD, px - s / 2, py - s / 2, s, s);
+    }
+    ctx.globalAlpha = 1;
 
-    // the stop: a white flash that fades
+    // the stop: a flash, and a shockwave ring
+    if (t > T.stop && !stopped) { stopped = true; waves.push({ at: t, x: W / 2, y: H / 2, big: true }); }
     if (t > T.stop) {
-      const flash = Math.exp(-(t - T.stop) * 6) * 0.55;
-      ctx.fillStyle = `rgba(246,233,204,${flash})`;
-      ctx.fillRect(0, 0, W, H);
+      const f = Math.exp(-(t - T.stop) * 5) * 0.7;
+      ctx.fillStyle = `rgba(255,244,226,${f})`; ctx.fillRect(0, 0, W, H);
     }
 
-    // the heart planet drifts closer and beats
-    if (t > T.heart) {
-      const a = easeOut(span(t, T.heart, T.heartNear));
-      drawHeart(t, W / 2, H * 0.44, lerp(R * 0.02, R * 0.16, a), clamp01((t - T.heart) / 0.8));
+    // the heart: first a far glow, then it drifts close and beats
+    const hx = W / 2, hy = H * 0.4;
+    if (t > T.heart - 1.2) {
+      const glow = clamp01((t - T.heart + 1.2) / 1.5);
+      const near = easeInOut(span(t, T.heart, T.heartNear));
+      const full = Math.min(W * 0.95, H * 0.62);                 // as big as fits: fills a phone held upright too
+      const size = full * lerp(0.1, 1, near), a = clamp01((t - T.heart) / 1.4), b = t > T.heart ? beat(t) : 0;
+      // count beats: each "lub" sends a ring outward and pushes the specks
+      const n = t > T.heart ? Math.floor((t - T.heart) / BEAT) + 1 : 0;
+      if (n > beatsSeen) { beatsSeen = n; waves.push({ at: t, x: hx, y: hy, big: false, r0: size * 0.35 }); push = 1; }
+      push *= Math.exp(-dt * 3);
+
+      const gs = size * (2.2 + 0.5 * b);
+      ctx.globalAlpha = (0.25 + 0.25 * b) * glow; ctx.drawImage(GOLD, hx - gs / 2, hy - gs / 2, gs, gs);
+      // a wide lens flare through the heart, brighter on the beat
+      ctx.globalAlpha = (0.12 + 0.3 * b) * glow;
+      ctx.drawImage(GOLD, hx - size * 2.6, hy - size * 0.04, size * 5.2, size * 0.08);
+      ctx.drawImage(WHITE, hx - size * 1.4, hy - size * 0.015, size * 2.8, size * 0.03);
+      ctx.globalAlpha = 1;
+
+      // specks circling the heart, in front and behind
+      for (const m of motes) {
+        m.a += m.sp * dt;
+        const rr = size * 0.55 * m.r * (1 + 0.25 * push), x = Math.cos(m.a) * rr, z = Math.sin(m.a);
+        const px = hx + x, py = hy + (z * rr * 0.28 + x * m.tilt * 0.4), s = m.s * R * 0.012 * (1.2 + 0.4 * z);
+        ctx.globalAlpha = a * (0.35 + 0.35 * (z + 1) / 2) * (0.7 + 0.3 * b);
+        ctx.drawImage(GOLD, px - s / 2, py - s / 2, s, s);
+      }
+      ctx.globalAlpha = 1;
+      if (a > 0) drawHeart(t, hx, hy, size, a);
     }
 
-    drawCockpit(t, v, 1 - span(t, T.flash, T.flash + 0.4));
-    if (t < T.fadeIn) {                                           // the view fades in from black
-      ctx.fillStyle = `rgba(2,6,5,${1 - ease(t / T.fadeIn)})`;
-      ctx.fillRect(0, 0, W, H);
+    // rings: the stop's shockwave, and one per heartbeat
+    for (let i = waves.length - 1; i >= 0; i--) {
+      const w = waves[i], age = t - w.at, life = w.big ? 1.6 : 2.2;
+      if (age > life) { waves.splice(i, 1); continue; }
+      const p = age / life, r = w.big ? Math.max(W, H) * easeOut(p) : w.r0 + R * 0.7 * easeOut(p);
+      ctx.beginPath(); ctx.ellipse(w.x, w.y, r, r * (w.big ? 1 : 0.9), 0, 0, 6.283);
+      ctx.strokeStyle = w.big ? `rgba(255,244,226,${0.5 * (1 - p)})` : `rgba(255,214,150,${0.45 * (1 - p) * (1 - p)})`;
+      ctx.lineWidth = w.big ? 3 + 10 * (1 - p) : 1.5 + 3 * (1 - p);
+      ctx.stroke();
     }
 
-    // the last beat floods the screen
-    if (t > T.flash) {
-      const k = ease(span(t, T.flash, T.end));
-      const g = ctx.createRadialGradient(W / 2, H * 0.44, 0, W / 2, H * 0.44, Math.max(W, H) * (0.2 + 1.2 * k));
-      g.addColorStop(0, `rgba(255,240,224,${k})`);
-      g.addColorStop(0.6, `rgba(246,233,204,${0.8 * k})`);
-      g.addColorStop(1, `rgba(201,174,123,${0.6 * k})`);
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'source-over';
+    // the look of a film: dark edges, and widescreen bars that slide in and back out
+    ctx.drawImage(vignette, 0, 0, W, H);
+    const bar = H * (W > H ? 0.1 : 0.06) * smooth(span(t, 0.4, 2.2)) * (1 - smooth(span(t, T.bloom, T.end)));
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, bar); ctx.fillRect(0, H - bar, W, bar);
+    if (t < T.fadeIn) { ctx.fillStyle = `rgba(1,4,3,${1 - smooth(t / T.fadeIn)})`; ctx.fillRect(0, 0, W, H); }
+
+    // the last beat: warm light floods the screen
+    if (t > T.bloom) {
+      const k = smooth(span(t, T.bloom, T.end));
+      const g = ctx.createRadialGradient(hx, hy, 0, hx, hy, Math.hypot(W, H) * (0.15 + 0.9 * k));
+      g.addColorStop(0, `rgba(255,244,228,${k})`); g.addColorStop(0.55, `rgba(246,233,204,${0.85 * k})`); g.addColorStop(1, `rgba(201,174,123,${0.7 * k})`);
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     }
 
-    if (t > T.title && !title.classList.contains('show')) title.classList.add('show');
-    if (t > T.flash && title.classList.contains('show')) title.classList.add('gone');
+    if (t > T.line1) line1.classList.add('show');
+    if (t > T.line2) line2.classList.add('show');
+    if (t > T.bloom + 0.4) { line1.classList.add('gone'); line2.classList.add('gone'); }
     if (t >= T.end) { finish(); return; }
     requestAnimationFrame(frame);
   }
@@ -306,13 +391,15 @@
     if (done) return;
     done = true;
     remember();
-    root.classList.remove('intro-on');                            // the page shows underneath...
-    box.classList.add('leaving');                                 // ...as the overlay fades out
+    root.classList.remove('intro-on');                              // the page shows underneath...
+    box.classList.add('leaving');                                   // ...as the overlay fades out
     const remove = () => { box.remove(); removeEventListener('resize', resize); removeEventListener('keydown', onKey); };
     box.addEventListener('transitionend', remove, { once: true });
-    setTimeout(remove, 1500);                                     // in case the transition doesn't run
+    setTimeout(remove, 1500);                                       // in case the transition doesn't run
   }
   function onKey(e) { if (e.key === 'Escape') finish(); }
+  resize();
+  addEventListener('resize', resize);
   skip.onclick = finish;
   addEventListener('keydown', onKey);
   skip.focus({ preventScroll: true });
