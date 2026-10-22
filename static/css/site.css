@@ -557,6 +557,8 @@ th { background: #F1EBDF; font-weight: 500; }
   .nav a { font-size: 1.1em; }
   .card { padding: 20px; }
   .card .hr { font-size: 2.1em; }
+  /* narrow screens: the stacked pages peek out less, and the book leaves room for them on the right */
+  .book { --step-x: 4px; --step-y: 8px; margin-right: 16px; }
 }
 
   
@@ -844,6 +846,8 @@ table.data.text th, table.data.text td { text-align: left; }
 
 /* ---------- Home: the "book" (upload card on top, then the verdict, then the advice) ---------- */
 .book {
+  --step-x: 10px;                           /* how far each page beneath peeks out */
+  --step-y: 12px;
   display: grid;
   perspective: 1800px;
   margin-bottom: 30px;                      /* room for the pages peeking out below */
@@ -859,7 +863,7 @@ table.data.text th, table.data.text td { text-align: left; }
   isolation: isolate;
   transform-origin: left center;
   backface-visibility: hidden;
-  transform: translate(calc(var(--d, 0) * 10px), calc(var(--d, 0) * 12px));
+  transform: translate(calc(var(--d, 0) * var(--step-x)), calc(var(--d, 0) * var(--step-y)));
   transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
@@ -888,7 +892,7 @@ table.data.text th, table.data.text td { text-align: left; }
   border-radius: 10px;
   background: #EDE8DE;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-  transform: translate(8px, 10px);
+  transform: translate(var(--step-x), var(--step-y));
 }
 
 @media (prefers-reduced-motion: reduce) {
