@@ -1132,15 +1132,15 @@ html.intro-on body > :not(#intro) { visibility: hidden; animation: intro-failsaf
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: radial-gradient(circle 140px at var(--mx, 50%) var(--my, 50%), rgba(255, 236, 196, 0.85), rgba(232, 200, 140, 0.25) 45%, transparent 75%);
+  background: radial-gradient(280px 220px at var(--mx, 50%) var(--my, 50%), rgba(255, 240, 210, 0.42), rgba(255, 236, 196, 0.24) 30%, rgba(240, 214, 165, 0.10) 58%, rgba(240, 214, 165, 0.03) 80%, transparent);
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.6s ease;
   pointer-events: none;
 }
 
 .point:hover::after, .stat:hover::after, .note:hover::after, .tips:hover::after, .pipe-step:hover::after { opacity: 1; }
 .note.warn::after, .note.urgent::after {
-  background: radial-gradient(circle 140px at var(--mx, 50%) var(--my, 50%), rgba(255, 226, 214, 0.9), rgba(214, 150, 130, 0.2) 45%, transparent 75%);
+  background: radial-gradient(280px 220px at var(--mx, 50%) var(--my, 50%), rgba(255, 228, 216, 0.45), rgba(240, 190, 170, 0.2) 30%, rgba(214, 150, 130, 0.08) 58%, rgba(214, 150, 130, 0.02) 80%, transparent);
 }
 
 .point:hover, .stat:hover, .note:hover, .tips:hover, .pipe-step:hover {
