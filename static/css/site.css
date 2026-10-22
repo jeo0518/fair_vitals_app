@@ -703,14 +703,12 @@ table.data tr.best td { font-weight: 600; background: rgba(201, 174, 123, 0.14);
   border-radius: 10px;
 }
 
-.pipe-window > .pipe-label {
+.pipe-window > .pipe-label {          /* styled like the headings in the other inner boxes */
   margin: 0 0 10px;
-  font-size: 0.8em;
+  font-size: 1em;
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
   text-align: center;
-  color: var(--gold-dark);
+  color: var(--ink);
 }
 
 .pipe-branches {
