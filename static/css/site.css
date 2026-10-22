@@ -700,7 +700,6 @@ table.data tr.best td { font-weight: 600; background: rgba(201, 174, 123, 0.14);
 .pipe-window {
   width: 100%;
   padding: 14px;
-  border: 1.5px dashed var(--gold);
   border-radius: 10px;
 }
 
@@ -1107,7 +1106,7 @@ html.intro-on body > :not(#intro) { visibility: hidden; animation: intro-failsaf
 
 /* ---------- inner boxes: one thin border all round, and a glare on hover ---------- */
 /* Same background colours as before; the border takes each box's old accent colour. */
-.point, .stat, .note, .tips, .pipe-step {
+.point, .stat, .note, .tips, .pipe-step, .pipe-window {
   --edge: rgba(201, 174, 123, 0.7);
   position: relative;
   overflow: hidden;
@@ -1120,14 +1119,14 @@ html.intro-on body > :not(#intro) { visibility: hidden; animation: intro-failsaf
 .pipe-step { --edge: #DDD5C6; }
 .pipe-step.key { --edge: var(--gold); }
 .pipe-step.out { --edge: var(--ok); }
+.pipe-window { --edge: rgba(201, 174, 123, 0.7); background: rgba(241, 235, 223, 0.35); }
 .note.warn, .note.urgent { --edge: rgba(154, 74, 58, 0.6); }
-.pipe-window { border-width: 1px; }
 
 /* a soft gold light that follows the cursor inside the box (site.js sets --mx / --my). It sits under the
    text (z-index -1 inside the box's own stacking context), so words never get washed out. */
-.point, .stat, .note, .tips, .pipe-step { isolation: isolate; }
+.point, .stat, .note, .tips, .pipe-step, .pipe-window { isolation: isolate; }
 
-.point::after, .stat::after, .note::after, .tips::after, .pipe-step::after {
+.point::after, .stat::after, .note::after, .tips::after, .pipe-step::after, .pipe-window::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -1138,12 +1137,12 @@ html.intro-on body > :not(#intro) { visibility: hidden; animation: intro-failsaf
   pointer-events: none;
 }
 
-.point:hover::after, .stat:hover::after, .note:hover::after, .tips:hover::after, .pipe-step:hover::after { opacity: 1; }
+.point:hover::after, .stat:hover::after, .note:hover::after, .tips:hover::after, .pipe-step:hover::after, .pipe-window:hover::after { opacity: 1; }
 .note.warn::after, .note.urgent::after {
   background: radial-gradient(280px 220px at var(--mx, 50%) var(--my, 50%), rgba(255, 228, 216, 0.45), rgba(240, 190, 170, 0.2) 30%, rgba(214, 150, 130, 0.08) 58%, rgba(214, 150, 130, 0.02) 80%, transparent);
 }
 
-.point:hover, .stat:hover, .note:hover, .tips:hover, .pipe-step:hover {
+.point:hover, .stat:hover, .note:hover, .tips:hover, .pipe-step:hover, .pipe-window:hover {
   border-color: var(--gold);
   box-shadow: 0 0 0 1px rgba(201, 174, 123, 0.25), 0 0 16px rgba(201, 174, 123, 0.45);
 }

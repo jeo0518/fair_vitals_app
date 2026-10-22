@@ -103,14 +103,16 @@
   revealIn(document);
 })();
 
-// Inner boxes: tell each box where the cursor is, for the soft light that follows it (site.css).
+// Inner boxes: tell each box under the cursor where it is, for the soft light that follows it (site.css).
+// A diagram step sits inside the "every 10-second window" box, so both get the position.
+const LIT = '.point, .stat, .note, .tips, .pipe-step, .pipe-window';
 addEventListener('pointermove', e => {
-  if (e.pointerType !== 'mouse') return;
-  const box = e.target.closest && e.target.closest('.point, .stat, .note, .tips, .pipe-step');
-  if (!box) return;
-  const r = box.getBoundingClientRect();
-  box.style.setProperty('--mx', `${e.clientX - r.left}px`);
-  box.style.setProperty('--my', `${e.clientY - r.top}px`);
+  if (e.pointerType !== 'mouse' || !e.target.closest) return;
+  for (let box = e.target.closest(LIT); box; box = box.parentElement && box.parentElement.closest(LIT)) {
+    const r = box.getBoundingClientRect();
+    box.style.setProperty('--mx', `${e.clientX - r.left}px`);
+    box.style.setProperty('--my', `${e.clientY - r.top}px`);
+  }
 }, { passive: true });
 
 // Header: the logo's shadow drifts away from the cursor, as if the cursor were a light.
