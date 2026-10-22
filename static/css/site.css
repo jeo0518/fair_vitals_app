@@ -490,8 +490,6 @@ p {
 .tips {
   margin: 16px 0;
   padding: 12px 16px 12px 36px;
-  border-left: 4px solid var(--gold);
-  border-radius: 6px;
   background: #F1EBDF;
   font-weight: 300;
   line-height: 1.6;
@@ -608,7 +606,6 @@ th { background: #F1EBDF; font-weight: 500; }
   padding: 16px;
   border-radius: 8px;
   background: rgba(241, 235, 223, 0.7);
-  border-top: 3px solid var(--gold);
 }
 
 .card .point h3 { margin: 0 0 6px; font-size: 1em; }
@@ -627,14 +624,12 @@ th { background: #F1EBDF; font-weight: 500; }
 .note {
   margin: 16px 0;
   padding: 12px 16px;
-  border-left: 4px solid var(--gold);
-  border-radius: 6px;
   background: #F1EBDF;
   font-weight: 300;
   line-height: 1.6;
 }
 
-.note.warn { border-left-color: var(--bad); background: #F4E7E2; }
+.note.warn { background: #F4E7E2; }
 
 /* Big numbers. */
 .stats {
@@ -971,7 +966,7 @@ a.btn { text-decoration: none; }
 
 /* ---------- advice card ---------- */
 .advice-card ul.plain li { margin-bottom: 10px; }
-.note.urgent { border-left-color: var(--bad); background: #F4E7E2; }
+.note.urgent { background: #F4E7E2; }
 
 /* ---------- My page: pulse log ---------- */
 .log-card { max-width: 820px; }
@@ -1109,3 +1104,50 @@ html.intro-on body > :not(#intro) { visibility: hidden; animation: intro-failsaf
 }
 
 .intro-skip:hover, .intro-skip:focus-visible { background: rgba(201, 174, 123, 0.25); box-shadow: 0 0 14px rgba(201, 174, 123, 0.5); outline: none; }
+
+/* ---------- inner boxes: one thin border all round, and a glare on hover ---------- */
+/* Same background colours as before; the border takes each box's old accent colour. */
+.point, .stat, .note, .tips, .pipe-step {
+  --edge: rgba(201, 174, 123, 0.7);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  transition: box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.stat { --edge: rgba(201, 174, 123, 0.45); }
+.pipe-step { --edge: #DDD5C6; }
+.pipe-step.key { --edge: var(--gold); }
+.pipe-step.out { --edge: var(--ok); }
+.note.warn, .note.urgent { --edge: rgba(154, 74, 58, 0.6); }
+.pipe-window { border-width: 1px; }
+
+/* the glare: a soft band of light that sweeps across once when the cursor comes in */
+.point::after, .stat::after, .note::after, .tips::after, .pipe-step::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 45%;
+  background: linear-gradient(100deg, transparent 10%, rgba(232, 200, 140, 0.35) 35%, rgba(255, 255, 255, 0.95) 50%, rgba(232, 200, 140, 0.35) 65%, transparent 90%);
+  transform: translateX(-160%) skewX(-12deg);
+  pointer-events: none;
+}
+
+.point:hover::after, .stat:hover::after, .note:hover::after, .tips:hover::after, .pipe-step:hover::after {
+  transform: translateX(330%) skewX(-12deg);
+  transition: transform 0.9s cubic-bezier(0.3, 0.6, 0.3, 1);
+}
+
+.point:hover, .stat:hover, .note:hover, .tips:hover, .pipe-step:hover {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px rgba(201, 174, 123, 0.25), 0 0 16px rgba(201, 174, 123, 0.45);
+}
+
+.note.warn:hover, .note.urgent:hover { border-color: var(--bad); box-shadow: 0 0 14px rgba(154, 74, 58, 0.3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .point::after, .stat::after, .note::after, .tips::after, .pipe-step::after { display: none; }
+}
