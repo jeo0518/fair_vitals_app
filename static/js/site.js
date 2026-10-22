@@ -1,14 +1,15 @@
 // Shared by every page: card effects, the header logo's shadow, and the space background.
 // Cards: add the effect layers (glow, turning border, white surface with sheen and cursor light) to every
 // .card, so the pages only need <div class="card">. Every card glows while the cursor is inside it, with
-// a soft light following the cursor. Cards marked data-tilt also tilt so the spot under the cursor dips
-// away, as if pressed there (starting a little outside the card). The tilt eases toward the cursor once
-// per animation frame, so it stays smooth however fast the mouse moves. Mouse only; no tilt with
-// reduced motion.
+// a soft light following the cursor, and tilts so the spot under the cursor dips away, as if pressed
+// there (starting a little outside the card). Tall cards tilt less, so their far edges never swing more
+// than EDGE px. The tilt eases toward the cursor once per animation frame, so it stays smooth however
+// fast the mouse moves. Mouse only; no tilt with reduced motion.
 (() => {
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp = v => Math.max(-1, Math.min(1, v));
-  const NEAR = 60, MAX = 4, EASE = 0.12;          // px around the card, max degrees, share of the gap closed per frame
+  const NEAR = 60, MAX = 4, EDGE = 24, EASE = 0.12;   // px around the card, max degrees, max edge swing px, share of the gap closed per frame
+  const maxDeg = size => Math.min(MAX, Math.atan(EDGE / (size / 2)) * 180 / Math.PI);
 
   for (const card of document.querySelectorAll('.card')) {
     card.insertAdjacentHTML('afterbegin',
@@ -16,16 +17,6 @@
       '<div class="card-fx card-spin" aria-hidden="true"></div>' +
       '<div class="card-fx card-surface" aria-hidden="true"><div class="card-pearl"></div><div class="card-spot"></div></div>');
     const spot = card.querySelector('.card-spot');
-    if (!card.hasAttribute('data-tilt')) {
-      card.addEventListener('pointermove', e => {
-        if (e.pointerType !== 'mouse') return;
-        const r = card.getBoundingClientRect();
-        card.classList.add('glow');
-        spot.style.transform = `translate3d(${e.clientX - r.left}px, ${e.clientY - r.top}px, 0)`;
-      }, { passive: true });
-      card.addEventListener('pointerleave', () => card.classList.remove('glow'));
-      continue;
-    }
 
     const target = { rx: 0, ry: 0, s: 1 }, now = { rx: 0, ry: 0, s: 1 };
     let box = null, running = false;
@@ -59,13 +50,44 @@
       const inside = x >= 0 && y >= 0 && x <= box.w && y <= box.h;
       card.classList.toggle('glow', inside);
       if (inside) spot.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-      aim(-clamp((y - box.h / 2) / (box.h / 2)) * MAX, clamp((x - box.w / 2) / (box.w / 2)) * MAX, inside ? 0.99 : 1);
+      aim(-clamp((y - box.h / 2) / (box.h / 2)) * maxDeg(box.h), clamp((x - box.w / 2) / (box.w / 2)) * maxDeg(box.w),
+          inside ? 0.99 : 1);
     }, { passive: true });
     // the card moves or changes size: measure again on the next mouse move
     for (const ev of ['scroll', 'resize']) addEventListener(ev, () => { box = null; }, { passive: true });
     new ResizeObserver(() => { box = null; }).observe(card);
     document.documentElement.addEventListener('mouseleave', () => { card.classList.remove('glow'); aim(0, 0, 1); });
   }
+})();
+
+// Inner blocks and buttons: the first time each one scrolls into view it rises into place and glows
+// briefly; siblings follow one after another. Content added later (the analysis result) can call
+// window.revealIn(element). Skipped entirely with reduced motion, so everything just shows.
+(() => {
+  const SELECTOR = '.point, .stat, .note, .pipe-step, .pipe-window, table.data, .btn, .tips, .verdict, .meter, details';
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+    window.revealIn = () => {};
+    return;
+  }
+  const seen = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      e.target.classList.add('seen');
+      seen.unobserve(e.target);
+    }
+  }, { threshold: 0 });
+  window.revealIn = root => {
+    const order = new Map();                       // stagger siblings: 0, 90, 180 ... ms, at most 450
+    for (const el of root.querySelectorAll(SELECTOR)) {
+      if (el.classList.contains('reveal') || el.closest('.reveal')) continue;   // don't animate inside an animating block
+      const i = order.get(el.parentElement) || 0;
+      order.set(el.parentElement, i + 1);
+      el.style.setProperty('--d', `${Math.min(i * 90, 450)}ms`);
+      el.classList.add('reveal');
+      seen.observe(el);
+    }
+  };
+  revealIn(document);
 })();
 
 // Header: the logo's shadow drifts away from the cursor, as if the cursor were a light.

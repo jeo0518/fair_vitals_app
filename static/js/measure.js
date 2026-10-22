@@ -41,6 +41,7 @@ $('go').onclick = async () => {
           + `<p class="muted">Reading from: ${r.details.estimate}. CNN: ${r.details.cnn}. `
           + `Face detector: ${r.details.face_detector}. Video length analyzed: ${r.duration_s} s.</p></div></details>`;
     $('result').innerHTML = html;
+    revealIn($('result'));
   } catch (e) {
     $('status').textContent = 'Request failed: ' + e.message;
   } finally {
