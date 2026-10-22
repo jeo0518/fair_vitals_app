@@ -2,8 +2,8 @@
 // speed, stop dead, and in the silence a transparent golden heart beats in front of you; "We invite you
 // to Fair Vitals" appears and the site fades in. Drawn live on a canvas (no video file), about 20 seconds.
 // The small script in each page's <head> adds html.intro-on for first-time visitors (or when the address
-// has ?intro), which hides the page until this finishes. Skip button and Esc skip it; with reduced motion
-// it never plays.
+// has ?intro), which hides the page until this finishes. It always plays to the end (no skipping), except
+// that with reduced motion it never plays.
 (() => {
   const root = document.documentElement, KEY = 'fv-intro-seen';
   if (!root.classList.contains('intro-on')) return;
@@ -12,7 +12,7 @@
 
   // ---------------------------------------------------------------- timeline (seconds)
   const T = {
-    fadeIn: 2.2,          // black to space; the widescreen bars slide in
+    fadeIn: 2.2,          // black to space
     warpFrom: 3.6,        // start accelerating...
     warpFull: 8.0,        // ...to full warp
     stop: 8.9,            // the brakes: speed falls to nothing in STOP_LEN
@@ -31,11 +31,10 @@
   box.setAttribute('role', 'dialog');
   box.setAttribute('aria-label', 'Intro animation');
   box.innerHTML = '<canvas aria-hidden="true"></canvas>'
-    + '<div class="intro-title"><p class="intro-l1">We invite you to</p><h1 class="intro-l2">Fair Vitals</h1></div>'
-    + '<button class="intro-skip" type="button">Skip</button>';
+    + '<div class="intro-title"><p class="intro-l1">We invite you to</p><h1 class="intro-l2">Fair Vitals</h1></div>';
   document.body.prepend(box);
   const canvas = box.querySelector('canvas'), ctx = canvas.getContext('2d');
-  const line1 = box.querySelector('.intro-l1'), line2 = box.querySelector('.intro-l2'), skip = box.querySelector('.intro-skip');
+  const line1 = box.querySelector('.intro-l1'), line2 = box.querySelector('.intro-l2');
 
   let W, H, R, dpr, nebula, vignette;
   function resize() {
@@ -365,10 +364,8 @@
     }
 
     ctx.globalCompositeOperation = 'source-over';
-    // the look of a film: dark edges, and widescreen bars that slide in and back out
+    // the look of a film: dark edges
     ctx.drawImage(vignette, 0, 0, W, H);
-    const bar = H * (W > H ? 0.1 : 0.06) * smooth(span(t, 0.4, 2.2)) * (1 - smooth(span(t, T.bloom, T.end)));
-    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, bar); ctx.fillRect(0, H - bar, W, bar);
     if (t < T.fadeIn) { ctx.fillStyle = `rgba(1,4,3,${1 - smooth(t / T.fadeIn)})`; ctx.fillRect(0, 0, W, H); }
 
     // the last beat: warm light floods the screen
@@ -386,22 +383,18 @@
     requestAnimationFrame(frame);
   }
 
-  // ---------------------------------------------------------------- end / skip
+  // ---------------------------------------------------------------- end
   function finish() {
     if (done) return;
     done = true;
     remember();
     root.classList.remove('intro-on');                              // the page shows underneath...
     box.classList.add('leaving');                                   // ...as the overlay fades out
-    const remove = () => { box.remove(); removeEventListener('resize', resize); removeEventListener('keydown', onKey); };
+    const remove = () => { box.remove(); removeEventListener('resize', resize); };
     box.addEventListener('transitionend', remove, { once: true });
     setTimeout(remove, 1500);                                       // in case the transition doesn't run
   }
-  function onKey(e) { if (e.key === 'Escape') finish(); }
   resize();
   addEventListener('resize', resize);
-  skip.onclick = finish;
-  addEventListener('keydown', onKey);
-  skip.focus({ preventScroll: true });
   requestAnimationFrame(frame);
 })();

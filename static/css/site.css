@@ -1085,22 +1085,6 @@ html.intro-on body > :not(#intro) { visibility: hidden; animation: intro-failsaf
 .intro-l2.show { letter-spacing: 0.06em; }
 .intro-l1.gone, .intro-l2.gone { opacity: 0; transition-duration: 0.8s; }
 
-.intro-skip {
-  position: absolute;
-  right: 20px;
-  bottom: 20px;
-  padding: 8px 18px;
-  border: 1px solid rgba(201, 174, 123, 0.6);
-  border-radius: 999px;
-  font: inherit;
-  font-size: 0.9em;
-  color: rgba(246, 233, 204, 0.9);
-  background: rgba(2, 6, 5, 0.5);
-  cursor: pointer;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
-}
-
-.intro-skip:hover, .intro-skip:focus-visible { background: rgba(201, 174, 123, 0.25); box-shadow: 0 0 14px rgba(201, 174, 123, 0.5); outline: none; }
 
 /* ---------- inner boxes: one thin border all round, and a glare on hover ---------- */
 /* Same background colours as before; the border takes each box's old accent colour. */
