@@ -101,7 +101,7 @@ $('result').addEventListener('click', async e => {
   button.textContent = 'Saved ✓';
   showVerdict(r.reading, r.assessment);
   showAdvice(r.assessment);
-  turnPage(true);
+  turnTo(1);
 });
 
 const LABELS = { normal: 'Within the typical range', low: 'Lower than typical', high: 'Higher than typical',
@@ -133,11 +133,14 @@ function showVerdict(reading, a) {
       html += '<p class="muted">This reading is within 5 BPM of the edge of the range, which is about how far off a camera reading can be. Measuring again will tell you more.</p>';
     }
   }
-  html += '<div class="card-actions"><button class="btn" id="again">← Measure again</button>'
+  html += '<div class="card-actions">'
+        + (a.status === 'unknown' ? '' : '<button class="btn btn-primary" id="to-advice">What can I do? →</button>')
+        + '<button class="btn" id="again">← Measure again</button>'
         + '<a class="btn" href="/my">See my log</a></div>';
   $('verdict-card').querySelectorAll(':scope > :not(.card-fx)').forEach(el => el.remove());
   $('verdict-card').insertAdjacentHTML('beforeend', html);
-  $('again').onclick = () => turnPage(false);
+  $('again').onclick = () => turnTo(0);
+  if ($('to-advice')) $('to-advice').onclick = () => turnTo(2);
 }
 
 const ADVICE = {
@@ -174,8 +177,7 @@ const ADVICE = {
 function showAdvice(a) {
   const card = $('advice-card');
   card.querySelectorAll(':scope > :not(.card-fx)').forEach(el => el.remove());
-  card.dataset.ready = a.status === 'unknown' ? '' : '1';
-  if (!card.dataset.ready) return;
+  if (a.status === 'unknown') return;
   const tip = ADVICE[a.status];
   let html = `<p class="eyebrow">What you can do</p><h2>${tip.title}</h2>`
            + '<ul class="plain">' + tip.items.map(t => `<li>${t}</li>`).join('') + '</ul>';
@@ -185,31 +187,53 @@ function showAdvice(a) {
           + (a.far ? ' A reading this far outside the range is also worth getting checked soon if measuring again gives the same.' : '')
           + '</p>';
   }
-  html += '<p class="muted">General information, not medical advice. Ranges from MedlinePlus (U.S. National Library of Medicine).</p>';
+  html += '<p class="muted">General information, not medical advice. Ranges from MedlinePlus (U.S. National Library of Medicine).</p>'
+        + '<div class="card-actions"><button class="btn" id="to-verdict">← Back to my result</button>'
+        + '<button class="btn" id="again-2">Measure again</button></div>';
   card.insertAdjacentHTML('beforeend', html);
+  $('to-verdict').onclick = () => turnTo(1);
+  $('again-2').onclick = () => turnTo(0);
 }
 
-// Turn the upload card over (forward) to the verdict beneath it, or back again.
-function turnPage(forward) {
-  const book = $('book'), front = $('page-front'), advice = $('advice-card');
+// ---------------------------------------------------------------- the book: turning pages
+// Pages top to bottom: 0 the upload card, 1 the verdict, 2 the advice. `facing` is the page facing up; the
+// ones above it have been turned over (hidden), the ones below peek out by their depth (CSS --d).
+const PAGES = ['page-front', 'page-back', 'page-advice'].map(id => $(id));
+let facing = 0;
+const TURN = [{ transform: 'rotateY(0deg)', opacity: 1 }, { transform: 'rotateY(-90deg)', opacity: 1, offset: 0.5 },
+              { transform: 'rotateY(-90deg)', opacity: 0, offset: 0.5001 }, { transform: 'rotateY(-180deg)', opacity: 0 }];
+const UNTURN = [{ transform: 'rotateY(-180deg)', opacity: 0 }, { transform: 'rotateY(-90deg)', opacity: 0, offset: 0.4999 },
+                { transform: 'rotateY(-90deg)', opacity: 1, offset: 0.5 }, { transform: 'rotateY(0deg)', opacity: 1 }];
+
+function stack() {
+  PAGES.forEach((page, i) => {
+    const d = i - facing;
+    if (d >= 0) page.hidden = false;
+    page.style.setProperty('--d', Math.max(d, 0));
+    page.style.zIndex = 10 - i;                   // pages higher in the book always cover the ones below
+    page.classList.toggle('under', d > 0);
+  });
+}
+stack();
+
+// Turn pages over (forward) or back until page `to` faces up. Only the page that actually swings is
+// animated: going forward it is the page facing up now; going back, the page coming back on top.
+function turnTo(to) {
+  if (to === facing) return;
+  const forward = to > facing, page = PAGES[forward ? facing : to];
+  PAGES.forEach(p => p.getAnimations().forEach(a => a.cancel()));
+  const passed = forward ? PAGES.slice(facing, to) : [];
+  facing = to;
+  stack();
   const done = () => {
-    front.hidden = forward;
-    if (forward) {
-      advice.hidden = !advice.dataset.ready;
-      revealIn($('verdict-card')); revealIn(advice);
-      $('again').focus({ preventScroll: true });
-    }
+    passed.forEach(p => { p.hidden = true; });
+    const card = PAGES[facing].querySelector('.card');
+    revealIn(card);
+    (card.querySelector('.card-actions .btn') || card).focus({ preventScroll: true });
   };
-  front.getAnimations().forEach(a => a.cancel());
-  if (!forward) { advice.hidden = true; front.hidden = false; }
-  book.classList.toggle('turned', forward);
+  if (forward) passed.forEach(p => { p.hidden = false; });          // stay visible while turning
+  $('book').scrollIntoView({ behavior: stillMotion ? 'auto' : 'smooth', block: 'start' });
   if (stillMotion) { done(); return; }
-  // rotate around the left edge like a book page; hide it once it is edge-on, so its back never shows
-  const frames = [{ transform: 'rotateY(0deg)', opacity: 1 }, { transform: 'rotateY(-90deg)', opacity: 1, offset: 0.5 },
-                  { transform: 'rotateY(-90deg)', opacity: 0, offset: 0.5001 }, { transform: 'rotateY(-180deg)', opacity: 0 }];
-  const anim = front.animate(forward ? frames : frames.slice().reverse().map((f, i, all) => ({ ...f, offset: f.offset === undefined ? undefined : 1 - f.offset })),
-                             { duration: 1000, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' });
-  anim.onfinish = done;
-  if (forward) $('book').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // rotate around the left edge like a book page; hidden once edge-on, so its back never shows
+  page.animate(forward ? TURN : UNTURN, { duration: 1000, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' }).onfinish = done;
 }
-

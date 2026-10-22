@@ -66,17 +66,25 @@
       </p>
     </section>
 
-    <!-- The upload card is the top page of a small "book". Saving a reading turns that page over to the
-         verdict page beneath it; the advice card then appears below. -->
+    <!-- A small "book" of three pages, top to bottom: the upload card, the verdict, and what you can do.
+         Saving a reading turns the upload card over to the verdict; "What can I do?" turns the verdict over
+         to the advice. Pages are listed bottom first so the top page is painted last. -->
     <div class="book" id="book">
-      <div class="page page-back" id="page-back">
+      <div class="page" id="page-advice">
+        <section class="card advice-card" id="advice-card" aria-live="polite">
+          <p class="eyebrow">What you can do</p>
+          <p class="muted">Tips for your reading appear here after you save it.</p>
+        </section>
+        <div class="flip-shade" aria-hidden="true"></div>
+      </div>
+      <div class="page" id="page-back">
         <section class="card verdict-card" id="verdict-card" aria-live="polite">
           <p class="eyebrow">Your daily log</p>
           <p class="muted">Save a reading to see how it compares with the typical resting range for your age.</p>
         </section>
         <div class="flip-shade" aria-hidden="true"></div>
       </div>
-      <div class="page page-front" id="page-front">
+      <div class="page" id="page-front">
         <section class="card instruction" data-tilt>
           <p class="eyebrow">Try it</p>
           <p class="lead">Record a 20–30 second selfie video, then upload it.</p>
@@ -98,7 +106,6 @@
       </div>
     </div>
 
-    <section class="card advice-card" id="advice-card" hidden></section>
   </main>
 
   <footer class="site-footer">

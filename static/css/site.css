@@ -842,50 +842,30 @@ table.data.text th, table.data.text td { text-align: left; }
 .auth-form .btn { align-self: flex-start; }
 #signed-in .btn { margin-top: 8px; }
 
-/* ---------- Home: the "book" (upload card on top, verdict page beneath) ---------- */
+/* ---------- Home: the "book" (upload card on top, then the verdict, then the advice) ---------- */
 .book {
   display: grid;
   perspective: 1800px;
-  margin-bottom: 14px;                      /* room for the pages peeking out below */
+  margin-bottom: 30px;                      /* room for the pages peeking out below */
 }
 
+/* measure.js gives each page its depth --d (0 = on top) and z-index. Pages beneath peek out a little
+   below and to the right, like the next sheets of a pad; they slide up as the pages above are turned. */
 .page {
   grid-area: 1 / 1;
   display: flex;
   flex-direction: column;
   position: relative;
+  isolation: isolate;
+  transform-origin: left center;
+  backface-visibility: hidden;
+  transform: translate(calc(var(--d, 0) * 10px), calc(var(--d, 0) * 12px));
+  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 .page > .card { flex: 1; }
 
-.page-front {
-  z-index: 2;
-  transform-origin: left center;
-  backface-visibility: hidden;
-}
-
-/* The page beneath peeks out a little below and to the right, like the next sheet of a pad... */
-.page-back {
-  z-index: 1;
-  isolation: isolate;
-  transform: translate(10px, 12px);
-  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
-}
-
-/* ...with one more sheet under it. */
-.page-back::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -5;
-  border-radius: 10px;
-  background: #EDE8DE;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-  transform: translate(9px, 11px);
-  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.9s ease;
-}
-
-/* Darkens the page beneath while the top page is over it; lifts away as the page turns. */
+/* Darkens a page while another lies over it; lifts away when it comes to the top. */
 .flip-shade {
   position: absolute;
   inset: 0;
@@ -893,15 +873,26 @@ table.data.text th, table.data.text td { text-align: left; }
   border-radius: 10px;
   background: linear-gradient(90deg, rgba(16, 32, 29, 0.32), rgba(16, 32, 29, 0.12));
   pointer-events: none;
+  opacity: 0;
   transition: opacity 0.9s ease;
 }
 
-.book.turned .page-back { transform: none; }
-.book.turned .page-back::after { transform: translate(5px, 6px); opacity: 0.7; }
-.book.turned .flip-shade { opacity: 0; }
+.page.under .flip-shade { opacity: 1; }
+
+/* One more blank sheet under the last page. */
+#page-advice::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -5;
+  border-radius: 10px;
+  background: #EDE8DE;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transform: translate(8px, 10px);
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .page-back, .page-back::after, .flip-shade { transition: none; }
+  .page, .flip-shade { transition: none; }
 }
 
 .save-row {
