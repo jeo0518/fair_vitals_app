@@ -56,7 +56,9 @@ $('go').onclick = async () => {
   }
 };
 
-// Per-reading details: slide the table open and closed instead of jumping.
+// Per-reading details: the card takes its new size in one step, then the table fades and slides into
+// place. Only opacity and transform are animated: animating the height made the card (with its big
+// glowing border) redraw on every frame, which stuttered.
 $('result').addEventListener('click', e => {
   const summary = e.target.closest('summary');
   if (!summary || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -66,11 +68,9 @@ $('result').addEventListener('click', e => {
   const opening = !details.open || details.classList.contains('closing');
   details.classList.remove('closing');
   details.open = true;
-  const h = body.scrollHeight;
-  const anim = body.animate(
-    opening ? [{ height: '0px', opacity: 0 }, { height: `${h}px`, opacity: 1 }]
-            : [{ height: `${h}px`, opacity: 1 }, { height: '0px', opacity: 0 }],
-    { duration: 350, easing: 'ease' });
+  const shown = { opacity: 1, transform: 'none' }, hidden = { opacity: 0, transform: 'translateY(-10px)' };
+  const anim = body.animate(opening ? [hidden, shown] : [shown, hidden],
+                            { duration: opening ? 320 : 200, easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)' });
   if (!opening) {
     details.classList.add('closing');
     anim.onfinish = () => { details.open = false; details.classList.remove('closing'); };
