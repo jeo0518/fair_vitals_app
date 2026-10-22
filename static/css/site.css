@@ -297,7 +297,7 @@ h1 {
   background: var(--card) padding-box;      /* plain white until site.js adds the layers */
 }
 
-.card { will-change: transform; }
+.card[data-tilt] { will-change: transform; }
 
 .card-fx, .card-fx > * { position: absolute; pointer-events: none; }
 
