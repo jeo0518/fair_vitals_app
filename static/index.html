@@ -253,6 +253,7 @@
       max-width: 760px;
       margin: 0 auto;
       padding: 16px 16px 48px;
+      perspective: 1400px;
     }
 
     /* The card stays white, with a slowly turning gold-and-green border, a halo so it seems to float
@@ -274,7 +275,34 @@
         0 0 90px rgba(127, 168, 148, 0.18),
         0 24px 60px rgba(0, 0, 0, 0.45);
       animation: turn 12s linear infinite;
+      transition: transform 0.6s ease-out, box-shadow 0.5s ease;
     }
+
+    /* Tilt: set from JS so the card dips where the cursor is, as if pressed there. */
+    .instruction.tilting { transition: transform 0.15s ease-out, box-shadow 0.5s ease; }
+
+    /* Glow while the cursor is inside the card, plus a soft light that follows the cursor. */
+    .instruction.glow {
+      box-shadow:
+        0 0 36px rgba(246, 233, 204, 0.75),
+        0 0 110px rgba(201, 174, 123, 0.55),
+        0 0 180px rgba(127, 168, 148, 0.30),
+        0 24px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    .instruction::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      pointer-events: none;
+      background: radial-gradient(circle 260px at var(--mx, 50%) var(--my, 50%), rgba(246, 233, 204, 0.55), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .instruction.glow::after { opacity: 1; }
 
     .instruction::before {
       content: "";
@@ -302,6 +330,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       .instruction, .instruction::before { animation: none; }
+      .instruction, .instruction::after { transition: none; }
     }
 
     p {
@@ -590,6 +619,32 @@
   </script>
 
   <script>
+    // Card: tilts so the spot under the cursor dips away, as if pressed there (starts a little outside
+    // the card), and glows while the cursor is inside it. Mouse only; no tilt when reduced motion is on.
+    (() => {
+      const card = document.querySelector('.instruction'), NEAR = 60, MAX = 4;   // px around the card, max degrees
+      const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const clamp = v => Math.max(-1, Math.min(1, v));
+      const reset = () => { card.classList.remove('tilting', 'glow'); card.style.transform = ''; };
+      addEventListener('pointermove', e => {
+        if (e.pointerType !== 'mouse') return;
+        // untransformed position (from the card's offset parent), so the tilt itself doesn't move the target
+        const op = card.offsetParent, base = op.getBoundingClientRect();
+        const left = base.left + op.clientLeft + card.offsetLeft, top = base.top + op.clientTop + card.offsetTop;
+        const w = card.offsetWidth, h = card.offsetHeight;
+        const x = e.clientX - left, y = e.clientY - top;
+        if (x < -NEAR || y < -NEAR || x > w + NEAR || y > h + NEAR) { if (card.style.transform || card.classList.contains('glow')) reset(); return; }
+        const inside = x >= 0 && y >= 0 && x <= w && y <= h;
+        card.classList.toggle('glow', inside);
+        card.style.setProperty('--mx', `${x}px`); card.style.setProperty('--my', `${y}px`);
+        if (still) return;
+        const px = clamp((x - w / 2) / (w / 2)), py = clamp((y - h / 2) / (h / 2));
+        card.classList.add('tilting');
+        card.style.transform = `rotateX(${(-py * MAX).toFixed(2)}deg) rotateY(${(px * MAX).toFixed(2)}deg) scale(${inside ? 0.99 : 1})`;
+      });
+      document.documentElement.addEventListener('mouseleave', reset);
+    })();
+
     // Header: the logo's shadow drifts away from the cursor, as if the cursor were a light.
     (() => {
       const header = document.querySelector('.header'), logo = document.querySelector('.header-image');
