@@ -15,10 +15,15 @@ MAX_UPLOAD_MB = 200
 models = pipeline.Models()          # loaded once at startup
 print(f'Models loaded: {models.cnn_name}, trust {models.trust_file}, estimate "{models.estimate}", threshold {models.threshold}')
 app.mount('/source', StaticFiles(directory=os.path.join(HERE, 'static', 'source')), name='source')
+app.mount('/static', StaticFiles(directory=os.path.join(HERE, 'static')), name='static')
 
 @app.get('/')
 def index():
     return FileResponse(os.path.join(HERE, 'static', 'index.html'))
+
+@app.get('/about')
+def about():
+    return FileResponse(os.path.join(HERE, 'static', 'about.html'))
 
 @app.get('/health')
 def health():

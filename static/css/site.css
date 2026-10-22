@@ -1,0 +1,754 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap');
+
+:root {
+  --bg: #F4F1EC;
+  --gold: #C9AE7B;
+  --gold-dark: #A88D5C;
+  --ink: #10201D;
+  --muted: #5F6B68;
+  --card: #FBFAF7;
+  --ok: #2F6B4F;
+  --bad: #9A4A3A;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  min-height: 100%;
+  background:
+    radial-gradient(ellipse 60% 45% at 18% 35%, rgba(201, 174, 123, 0.16), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 85% 75%, rgba(47, 107, 79, 0.20), transparent 70%),
+    radial-gradient(ellipse at 50% 50%, #12231F, #070E0C 75%);
+  background-attachment: fixed;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  margin: 0;
+  color: var(--ink);
+}
+
+#space {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ---------- header ---------- */
+.header {
+  --sx: 2px;
+  --sy: 2px;
+  position: relative;
+  isolation: isolate;
+  padding: 16px;
+}
+
+/* Gold surface: warm light from the top left, faint star dust, a slow drifting sheen.
+   It reaches below the header and fades out, so the header melts into the space behind. */
+.header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 -32px 0;
+  z-index: -1;
+  background:
+    radial-gradient(1.5px 1.5px at 8% 22%, #FFFFFF, transparent),
+    radial-gradient(2px 2px at 19% 78%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1.5px 1.5px at 31% 12%, #FFFFFF, transparent),
+    radial-gradient(1px 1px at 37% 58%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(2px 2px at 46% 86%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 52% 20%, #FFFFFF, transparent),
+    radial-gradient(1px 1px at 61% 72%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(2px 2px at 68% 8%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1.5px 1.5px at 79% 90%, #FFFFFF, transparent),
+    radial-gradient(1px 1px at 88% 40%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(2px 2px at 96% 16%, #FFFFFF, transparent),
+    radial-gradient(ellipse 30% 90% at 4% 50%, rgba(255, 248, 230, 0.35), transparent 70%),
+    linear-gradient(160deg, #DCC69C 0%, var(--gold) 45%, #B4955F 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), rgba(0, 0, 0, 0.82) calc(100% - 36px), rgba(0, 0, 0, 0.55) calc(100% - 27px), rgba(0, 0, 0, 0.3) calc(100% - 18px), rgba(0, 0, 0, 0.12) calc(100% - 10px), rgba(0, 0, 0, 0.03) calc(100% - 4px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), rgba(0, 0, 0, 0.82) calc(100% - 36px), rgba(0, 0, 0, 0.55) calc(100% - 27px), rgba(0, 0, 0, 0.3) calc(100% - 18px), rgba(0, 0, 0, 0.12) calc(100% - 10px), rgba(0, 0, 0, 0.03) calc(100% - 4px), transparent);
+}
+
+/* Slowly drifting band of light across the header (moved with transform, so nothing repaints). */
+.header-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.header-sheen::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -120%;
+  width: 80%;
+  height: 240%;
+  margin-left: -40%;
+  background: radial-gradient(closest-side, rgba(255, 244, 220, 0.5), transparent);
+  animation: sheen 14s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+/* Orbit lines with two small planets circling slowly behind the menu. */
+.header::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 -32px 0;
+  z-index: -1;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='300' viewBox='0 0 700 300'%3E%3Cg transform='rotate%28-9 350 150%29' fill='none' stroke='white'%3E%3Cpath d='M20,150 a330,92 0 1,0 660,0 a330,92 0 1,0 -660,0' stroke-opacity='0.42' stroke-width='1.2'/%3E%3Cpath d='M110,150 a240,64 0 1,0 480,0 a240,64 0 1,0 -480,0' stroke-opacity='0.32' stroke-width='1'/%3E%3Cpath d='M200,150 a150,36 0 1,0 300,0 a150,36 0 1,0 -300,0' stroke-opacity='0.38' stroke-width='1' stroke-dasharray='2 6'/%3E%3Ccircle r='4.5' fill='white' fill-opacity='0.85' stroke='none'%3E%3CanimateMotion dur='38s' repeatCount='indefinite' path='M20,150 a330,92 0 1,0 660,0 a330,92 0 1,0 -660,0'/%3E%3C/circle%3E%3Ccircle r='3' fill='white' fill-opacity='0.75' stroke='none'%3E%3CanimateMotion dur='24s' repeatCount='indefinite' begin='-9s' path='M110,150 a240,64 0 1,0 480,0 a240,64 0 1,0 -480,0'/%3E%3C/circle%3E%3Ccircle cx='350' cy='150' r='7' fill='white' fill-opacity='0.35' stroke='none'/%3E%3C/g%3E%3C/svg%3E") right -40px center / 700px 300px no-repeat;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), rgba(0, 0, 0, 0.82) calc(100% - 36px), rgba(0, 0, 0, 0.55) calc(100% - 27px), rgba(0, 0, 0, 0.3) calc(100% - 18px), rgba(0, 0, 0, 0.12) calc(100% - 10px), rgba(0, 0, 0, 0.03) calc(100% - 4px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), rgba(0, 0, 0, 0.82) calc(100% - 36px), rgba(0, 0, 0, 0.55) calc(100% - 27px), rgba(0, 0, 0, 0.3) calc(100% - 18px), rgba(0, 0, 0, 0.12) calc(100% - 10px), rgba(0, 0, 0, 0.03) calc(100% - 4px), transparent);
+  pointer-events: none;
+}
+
+@keyframes sheen { from { transform: translateX(15vw); } to { transform: translateX(85vw); } }
+
+.border {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  overflow: hidden;
+  border: 5px solid white;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 18px rgba(255, 248, 230, 0.55), inset 0 0 22px rgba(255, 248, 230, 0.35);
+}
+
+/* Ripples spreading slowly from the logo, like a pulse moving through space. */
+.logo-wrap {
+  position: relative;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.ripples {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 900px;
+  height: 900px;
+  margin: -450px 0 0 -450px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.ripples circle {
+  fill: none;
+  stroke: #FFFFFF;
+  stroke-width: 1.6;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ripple 9s linear infinite;
+  opacity: 0;
+}
+
+.ripples circle:nth-child(2) { animation-delay: -2.25s; }
+.ripples circle:nth-child(3) { animation-delay: -4.5s; }
+.ripples circle:nth-child(4) { animation-delay: -6.75s; }
+
+@keyframes ripple {
+  0% { transform: scale(0.12); opacity: 0; }
+  10% { opacity: 0.8; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+.header-image {
+  width: 72px;
+  filter: drop-shadow(var(--sx) var(--sy) 4px rgba(0, 0, 0, 0.5));
+  transition: filter 0.8s ease-out;
+}
+
+h1 {
+  margin: 0;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: 0.01em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5), 0 0 18px rgba(255, 248, 230, 0.6);
+  white-space: nowrap;
+}
+
+.line-sector {
+  position: relative;
+  flex: 1;
+  min-width: 60px;
+  max-width: 430px;
+  height: 3px;
+  margin: 0 8px;
+  background: #FFFFFF;
+  filter: drop-shadow(0px 8px 12px rgba(0, 0, 0, 0.5));
+}
+
+.line-sector::before, .line-sector::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  width: 7px;
+  height: 7px;
+  border: 3px solid #FFFFFF;
+  border-radius: 50%;
+}
+
+.line-sector::before { left: -10px; }
+.line-sector::after { right: -10px; }
+
+/* A small light travelling along the line, like a signal. */
+.line-sector .spark {
+  position: absolute;
+  top: -3px;
+  width: 40px;
+  height: 9px;
+  margin-left: -20px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #FFFFFF, rgba(255, 255, 255, 0));
+  box-shadow: 0 0 12px 3px rgba(255, 248, 230, 0.8);
+  animation: spark 4.5s ease-in-out infinite;
+}
+
+@keyframes spark {
+  0% { left: 0; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+.nav {
+  display: flex;
+  gap: 32px;
+}
+
+.nav a {
+  position: relative;
+  padding-bottom: 4px;
+  font-size: 1.5em;
+  font-weight: 500;
+  color: #FFFFFF;
+  text-decoration: none;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 3px;
+  border-radius: 2px;
+  background: #FFFFFF;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.35s ease;
+}
+
+.nav a:hover::after, .nav a:focus-visible::after, .nav a[aria-current="page"]::after { transform: scaleX(1); }
+
+/* Logo + title link back to the home page. */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-image, .nav a::after, summary::before { transition: none; }
+  .header-sheen::before, .ripples circle, .line-sector .spark { animation: none; }
+  .ripples circle:first-child { opacity: 0.3; transform: scale(0.35); }
+  .line-sector .spark { display: none; }
+}
+
+.fadeout { height: 20px; }
+
+/* ---------- page body ---------- */
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 16px 16px 48px;
+  perspective: 1400px;
+}
+
+/* Cards stay white, with a slowly turning gold-and-green border, a halo so they seem to float
+   in space, a faint pearly sheen and star dust inside, and a small orbit in the top-right corner.
+   site.js adds the effect layers (.card-fx). Every moving part is its own layer moved with
+   transform/opacity only, so the browser never has to repaint a card (or its big blurred glow). */
+.card {
+  position: relative;
+  isolation: isolate;
+  padding: 28px;
+  border: 3px solid transparent;
+  border-radius: 10px;
+  box-shadow:
+    0 0 28px rgba(201, 174, 123, 0.35),
+    0 0 90px rgba(127, 168, 148, 0.18),
+    0 24px 60px rgba(0, 0, 0, 0.45);
+  background: var(--card) padding-box;      /* plain white until site.js adds the layers */
+}
+
+.card[data-tilt] { will-change: transform; }
+
+.card-fx, .card-fx > * { position: absolute; pointer-events: none; }
+
+/* Bright glow while the cursor is inside: only its opacity changes. */
+.card-glow {
+  inset: -3px;
+  z-index: -4;
+  border-radius: 10px;
+  box-shadow:
+    0 0 36px rgba(246, 233, 204, 0.75),
+    0 0 110px rgba(201, 174, 123, 0.55),
+    0 0 180px rgba(127, 168, 148, 0.30);
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  will-change: opacity;
+}
+
+/* Turning border: a big conic gradient spinning behind the card, seen through its transparent border. */
+.card-spin {
+  inset: -3px;
+  z-index: -3;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.card-spin::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1600px;
+  height: 1600px;
+  margin: -800px 0 0 -800px;
+  background: conic-gradient(#C9AE7B, #F6E9CC, #2F6B4F, #C9AE7B 50%, #F6E9CC, #7FA894, #C9AE7B);
+  animation: spin 12s linear infinite;
+  will-change: transform;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* White surface: corner tints, star dust and the orbit, painted once. */
+.card-surface {
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  border-radius: 7px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%23C9AE7B'%3E%3Cellipse cx='200' cy='60' rx='150' ry='54' transform='rotate%28-24 200 60%29' stroke-opacity='0.55' stroke-width='1.2'/%3E%3Cellipse cx='200' cy='60' rx='100' ry='34' transform='rotate%28-24 200 60%29' stroke-opacity='0.4' stroke-dasharray='2 5'/%3E%3C/g%3E%3Ccircle cx='200' cy='60' r='5' fill='%23C9AE7B' fill-opacity='0.45'/%3E%3C/svg%3E") right -60px top -70px / 260px 260px no-repeat,
+    radial-gradient(1.5px 1.5px at 7% 88%, rgba(16, 32, 29, 0.35), transparent),
+    radial-gradient(1px 1px at 14% 12%, rgba(16, 32, 29, 0.3), transparent),
+    radial-gradient(1.5px 1.5px at 47% 6%, rgba(168, 141, 92, 0.6), transparent),
+    radial-gradient(1px 1px at 63% 94%, rgba(16, 32, 29, 0.3), transparent),
+    radial-gradient(2px 2px at 92% 82%, rgba(168, 141, 92, 0.55), transparent),
+    radial-gradient(1px 1px at 97% 45%, rgba(16, 32, 29, 0.3), transparent),
+    radial-gradient(ellipse 55% 45% at 0% 0%, rgba(201, 174, 123, 0.16), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 100% 100%, rgba(127, 168, 148, 0.14), transparent 70%),
+    var(--card);
+}
+
+/* Pearly sheen drifting slowly across the card. */
+.card-pearl {
+  left: 0;
+  top: 0;
+  width: 70%;
+  height: 60%;
+  background: radial-gradient(closest-side, rgba(246, 233, 204, 0.5), transparent);
+  animation: pearl 16s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes pearl { from { transform: translate(-10%, 0); } to { transform: translate(55%, 10%); } }
+
+/* Soft light under the cursor: moved with transform, faded with opacity. */
+.card-spot {
+  left: 0;
+  top: 0;
+  width: 520px;
+  height: 520px;
+  margin: -260px 0 0 -260px;
+  background: radial-gradient(closest-side, rgba(246, 233, 204, 0.55), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  will-change: transform, opacity;
+}
+
+.card.glow .card-glow, .card.glow .card-spot { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .card-spin::before, .card-pearl { animation: none; }
+  .card-glow, .card-spot { transition: none; }
+}
+
+p {
+  font-weight: 300;
+  line-height: 1.5;
+}
+
+.lead { margin-top: 0; font-size: 1.1em; }
+
+.steps {
+  margin: 0 0 24px;
+  padding-left: 20px;
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+#video { display: none; }
+
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink);
+}
+
+.btn:hover { background: #EDE6DA; }
+
+.btn-primary {
+  border-color: var(--gold-dark);
+  background: var(--gold);
+  color: #FFFFFF;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.btn-primary:hover { background: var(--gold-dark); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+
+.file-name {
+  color: var(--muted);
+  font-weight: 300;
+  overflow-wrap: anywhere;
+}
+
+#status { min-height: 1.5em; margin: 16px 0 0; color: var(--muted); }
+
+/* ---------- result ---------- */
+#result:empty { display: none; }
+
+#result {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 2px solid #E4DDD0;
+}
+
+.hr {
+  margin: 0;
+  font-size: 2.6em;
+  font-weight: 600;
+}
+
+.hr small { font-size: 0.45em; font-weight: 400; color: var(--muted); }
+
+.verdict {
+  display: inline-block;
+  margin: 8px 0 16px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.9em;
+  font-weight: 500;
+  color: #FFFFFF;
+}
+
+.verdict.ok { background: var(--ok); }
+.verdict.bad { background: var(--bad); }
+
+.meter {
+  position: relative;
+  height: 10px;
+  margin: 8px 0 6px;
+  border-radius: 5px;
+  background: #E4DDD0;
+}
+
+.meter-fill { height: 100%; border-radius: 5px; background: var(--gold); }
+.meter-mark { position: absolute; top: -4px; width: 2px; height: 18px; background: var(--ink); }
+
+.tips {
+  margin: 16px 0;
+  padding: 12px 16px 12px 36px;
+  border-left: 4px solid var(--gold);
+  border-radius: 6px;
+  background: #F1EBDF;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+details { margin-top: 16px; }
+
+summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  list-style: none;
+}
+
+summary::-webkit-details-marker { display: none; }
+
+/* Arrow that turns smoothly instead of the browser's triangle flipping. */
+summary::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 6px solid currentColor;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  transition: transform 0.3s ease;
+}
+
+details[open]:not(.closing) > summary::before { transform: rotate(90deg); }
+.details-body { overflow: hidden; }
+.table-wrap { overflow-x: auto; }
+
+table {
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 0.9em;
+}
+
+td, th {
+  border: 1px solid #DDD5C6;
+  padding: 4px 8px;
+  text-align: right;
+}
+
+th { background: #F1EBDF; font-weight: 500; }
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
+.footnote { margin: 20px 0 0; }
+
+/* ---------- phones ---------- */
+@media (max-width: 720px) {
+  .line-sector { display: none; }
+  .header::after { background-position: right -330px top -40px; }
+  .border { flex-wrap: wrap; justify-content: center; gap: 8px 12px; }
+  .header-image { width: 48px; }
+  .brand { gap: 12px; }
+  .nav { width: 100%; justify-content: center; gap: 24px; }
+  .nav a { font-size: 1.1em; }
+  .card { padding: 20px; }
+  .hr { font-size: 2.1em; }
+}
+
+  
+
+/* ---------- text inside cards (home and about) ---------- */
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.8em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-dark);
+}
+
+.card h2 {
+  margin: 0 0 12px;
+  font-size: 1.6em;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.card h3 {
+  margin: 28px 0 8px;
+  font-size: 1.15em;
+  font-weight: 600;
+}
+
+.card h3:first-of-type { margin-top: 20px; }
+
+.card p, .card li { font-weight: 300; line-height: 1.6; }
+.card ul.plain, .card ol.plain { margin: 8px 0 0; padding-left: 22px; }
+.card ul.plain li, .card ol.plain li { margin-bottom: 6px; }
+.card b, .card strong { font-weight: 600; }
+
+.hero h2 { font-size: 2.1em; }
+.hero .lead { font-size: 1.15em; }
+
+/* Three short points on the home page. */
+.points {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.point {
+  padding: 16px;
+  border-radius: 8px;
+  background: rgba(241, 235, 223, 0.7);
+  border-top: 3px solid var(--gold);
+}
+
+.card .point h3 { margin: 0 0 6px; font-size: 1em; }
+.point p { margin: 0; font-size: 0.93em; }
+
+.link-arrow {
+  color: var(--ok);
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(47, 107, 79, 0.35);
+}
+
+.link-arrow:hover { border-bottom-color: var(--ok); }
+
+/* A short note, e.g. the honesty note about novelty. */
+.note {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--gold);
+  border-radius: 6px;
+  background: #F1EBDF;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.note.warn { border-left-color: var(--bad); background: #F4E7E2; }
+
+/* Big numbers. */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.stat {
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: rgba(241, 235, 223, 0.7);
+}
+
+.stat .num { display: block; font-size: 1.7em; font-weight: 600; line-height: 1.1; }
+.stat .lbl { display: block; margin-top: 4px; font-size: 0.85em; font-weight: 300; color: var(--muted); }
+
+/* Results tables on the about page. */
+table.data { width: 100%; margin: 12px 0 4px; font-size: 0.92em; }
+table.data th, table.data td { padding: 6px 10px; }
+table.data th:first-child, table.data td:first-child { text-align: left; }
+table.data tr.best td { font-weight: 600; background: rgba(201, 174, 123, 0.14); }
+.table-note { margin: 4px 0 0; font-size: 0.85em; color: var(--muted); }
+
+/* Pipeline diagram: steps top to bottom, the per-window checks side by side. */
+.pipeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin: 16px 0 8px;
+}
+
+.pipe-step {
+  width: 100%;
+  max-width: 520px;
+  padding: 12px 16px;
+  border: 1.5px solid #DDD5C6;
+  border-radius: 8px;
+  background: #FFFFFF;
+  text-align: center;
+}
+
+.pipe-step b { display: block; font-weight: 600; }
+.pipe-step span { display: block; font-size: 0.85em; font-weight: 300; color: var(--muted); }
+.pipe-step.key { border-color: var(--gold); background: #FBF5E9; }
+.pipe-step.out { border-color: var(--ok); background: #EEF4F0; }
+
+.pipe-arrow {
+  width: 2px;
+  height: 22px;
+  margin: 2px 0;
+  background: linear-gradient(var(--gold), var(--gold-dark));
+  position: relative;
+}
+
+.pipe-arrow::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: -4px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid var(--gold-dark);
+}
+
+.pipe-window {
+  width: 100%;
+  padding: 14px;
+  border: 1.5px dashed var(--gold);
+  border-radius: 10px;
+}
+
+.pipe-window > .pipe-label {
+  margin: 0 0 10px;
+  font-size: 0.8em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--gold-dark);
+}
+
+.pipe-branches {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.pipe-branches .pipe-step { max-width: none; }
+
+/* Next steps / two columns of short items. */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.site-footer {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+  text-align: center;
+  font-size: 0.85em;
+  font-weight: 300;
+  color: rgba(244, 241, 236, 0.6);
+}
+
+.site-footer a { color: rgba(244, 241, 236, 0.85); }
+
+@media (max-width: 720px) {
+  .hero h2 { font-size: 1.6em; }
+  .card h2 { font-size: 1.35em; }
+  .points, .stats, .two-col { grid-template-columns: 1fr; }
+  .pipe-branches { grid-template-columns: 1fr 1fr; }
+}
+
+table.data.text th, table.data.text td { text-align: left; }
+.more { margin: 20px 0 0; }

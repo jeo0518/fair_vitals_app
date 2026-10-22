@@ -16,7 +16,10 @@ same 17 trust features, same heart-rate estimate.
 - `fair_vitals_core.py`: models, readings and trust features, copied unchanged from Drive (`congressional-app-challenge/`).
   If you change it on Drive, copy it here again so the app matches the notebooks.
 - `worker.py`: decodes the video (ffmpeg) and crops the face (YuNet) in a separate process.
-- `static/index.html`: the test page.
+- `static/index.html`: the home page (short explanation + the video upload).
+- `static/about.html`: the about page (architecture, what's new, limitations).
+- `static/css/site.css`, `static/js/site.js`: the shared look and effects of every page.
+- `static/js/measure.js`: uploading a video and showing the result (home page).
 - `models/`: put the model files here (see below).
 
 ## Models to copy from Google Drive (`congressional-app-challenge/models/`)
