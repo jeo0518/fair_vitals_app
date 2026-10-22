@@ -73,12 +73,32 @@
         radial-gradient(1.5px 1.5px at 79% 90%, #FFFFFF, transparent),
         radial-gradient(1px 1px at 88% 40%, rgba(255, 255, 255, 0.9), transparent),
         radial-gradient(2px 2px at 96% 16%, #FFFFFF, transparent),
-        radial-gradient(ellipse 40% 120% at var(--sheen, 30%) 0%, rgba(255, 244, 220, 0.5), transparent 70%),
         radial-gradient(ellipse 30% 90% at 4% 50%, rgba(255, 248, 230, 0.35), transparent 70%),
         linear-gradient(160deg, #DCC69C 0%, var(--gold) 45%, #B4955F 100%);
       -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), rgba(0, 0, 0, 0.82) calc(100% - 36px), rgba(0, 0, 0, 0.55) calc(100% - 27px), rgba(0, 0, 0, 0.3) calc(100% - 18px), rgba(0, 0, 0, 0.12) calc(100% - 10px), rgba(0, 0, 0, 0.03) calc(100% - 4px), transparent);
       mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), rgba(0, 0, 0, 0.82) calc(100% - 36px), rgba(0, 0, 0, 0.55) calc(100% - 27px), rgba(0, 0, 0, 0.3) calc(100% - 18px), rgba(0, 0, 0, 0.12) calc(100% - 10px), rgba(0, 0, 0, 0.03) calc(100% - 4px), transparent);
+    }
+
+    /* Slowly drifting band of light across the header (moved with transform, so nothing repaints). */
+    .header-sheen {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .header-sheen::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: -120%;
+      width: 80%;
+      height: 240%;
+      margin-left: -40%;
+      background: radial-gradient(closest-side, rgba(255, 244, 220, 0.5), transparent);
       animation: sheen 14s ease-in-out infinite alternate;
+      will-change: transform;
     }
 
     /* Orbit lines with two small planets circling slowly behind the menu. */
@@ -93,8 +113,7 @@
       pointer-events: none;
     }
 
-    @property --sheen { syntax: "<percentage>"; inherits: false; initial-value: 30%; }
-    @keyframes sheen { from { --sheen: 15%; } to { --sheen: 85%; } }
+    @keyframes sheen { from { transform: translateX(15vw); } to { transform: translateX(85vw); } }
 
     .border {
       position: relative;
@@ -241,7 +260,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       .header-image, .nav a::after, summary::before { transition: none; }
-      .header::before, .ripples circle, .line-sector .spark { animation: none; }
+      .header-sheen::before, .ripples circle, .line-sector .spark { animation: none; }
       .ripples circle:first-child { opacity: 0.3; transform: scale(0.35); }
       .line-sector .spark { display: none; }
     }
@@ -257,60 +276,67 @@
     }
 
     /* The card stays white, with a slowly turning gold-and-green border, a halo so it seems to float
-       in space, a faint pearly sheen and star dust inside, and a small orbit in the top-right corner. */
-    @property --angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
-    @keyframes turn { to { --angle: 360deg; } }
-
+       in space, a faint pearly sheen and star dust inside, and a small orbit in the top-right corner.
+       Every moving part is its own layer moved with transform/opacity only, so the browser never has to
+       repaint the card (or its big blurred glow) while it animates or tilts. */
     .instruction {
       position: relative;
       isolation: isolate;
       padding: 28px;
       border: 3px solid transparent;
       border-radius: 10px;
-      background:
-        linear-gradient(var(--card), var(--card)) padding-box,
-        conic-gradient(from var(--angle), #C9AE7B, #F6E9CC, #2F6B4F, #C9AE7B 50%, #F6E9CC, #7FA894, #C9AE7B) border-box;
       box-shadow:
         0 0 28px rgba(201, 174, 123, 0.35),
         0 0 90px rgba(127, 168, 148, 0.18),
         0 24px 60px rgba(0, 0, 0, 0.45);
-      animation: turn 12s linear infinite;
-      transition: transform 0.6s ease-out, box-shadow 0.5s ease;
+      will-change: transform;
     }
 
-    /* Tilt: set from JS so the card dips where the cursor is, as if pressed there. */
-    .instruction.tilting { transition: transform 0.15s ease-out, box-shadow 0.5s ease; }
+    .card-fx, .card-fx > * { position: absolute; pointer-events: none; }
 
-    /* Glow while the cursor is inside the card, plus a soft light that follows the cursor. */
-    .instruction.glow {
+    /* Bright glow while the cursor is inside: only its opacity changes. */
+    .card-glow {
+      inset: -3px;
+      z-index: -4;
+      border-radius: 10px;
       box-shadow:
         0 0 36px rgba(246, 233, 204, 0.75),
         0 0 110px rgba(201, 174, 123, 0.55),
-        0 0 180px rgba(127, 168, 148, 0.30),
-        0 24px 60px rgba(0, 0, 0, 0.45);
-    }
-
-    .instruction::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: -1;
-      border-radius: inherit;
-      pointer-events: none;
-      background: radial-gradient(circle 260px at var(--mx, 50%) var(--my, 50%), rgba(246, 233, 204, 0.55), transparent 70%);
+        0 0 180px rgba(127, 168, 148, 0.30);
       opacity: 0;
-      transition: opacity 0.4s ease;
+      transition: opacity 0.45s ease;
+      will-change: opacity;
     }
 
-    .instruction.glow::after { opacity: 1; }
+    /* Turning border: a big conic gradient spinning behind the card, seen through its transparent border. */
+    .card-spin {
+      inset: -3px;
+      z-index: -3;
+      overflow: hidden;
+      border-radius: 10px;
+    }
 
-    .instruction::before {
+    .card-spin::before {
       content: "";
       position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 1600px;
+      height: 1600px;
+      margin: -800px 0 0 -800px;
+      background: conic-gradient(#C9AE7B, #F6E9CC, #2F6B4F, #C9AE7B 50%, #F6E9CC, #7FA894, #C9AE7B);
+      animation: spin 12s linear infinite;
+      will-change: transform;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* White surface: corner tints, star dust and the orbit, painted once. */
+    .card-surface {
       inset: 0;
-      z-index: -1;
-      border-radius: inherit;
-      pointer-events: none;
+      z-index: -2;
+      overflow: hidden;
+      border-radius: 7px;
       background:
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%23C9AE7B'%3E%3Cellipse cx='200' cy='60' rx='150' ry='54' transform='rotate%28-24 200 60%29' stroke-opacity='0.55' stroke-width='1.2'/%3E%3Cellipse cx='200' cy='60' rx='100' ry='34' transform='rotate%28-24 200 60%29' stroke-opacity='0.4' stroke-dasharray='2 5'/%3E%3C/g%3E%3Ccircle cx='200' cy='60' r='5' fill='%23C9AE7B' fill-opacity='0.45'/%3E%3C/svg%3E") right -60px top -70px / 260px 260px no-repeat,
         radial-gradient(1.5px 1.5px at 7% 88%, rgba(16, 32, 29, 0.35), transparent),
@@ -321,16 +347,40 @@
         radial-gradient(1px 1px at 97% 45%, rgba(16, 32, 29, 0.3), transparent),
         radial-gradient(ellipse 55% 45% at 0% 0%, rgba(201, 174, 123, 0.16), transparent 70%),
         radial-gradient(ellipse 50% 40% at 100% 100%, rgba(127, 168, 148, 0.14), transparent 70%),
-        radial-gradient(ellipse 35% 30% at var(--pearl, 70%) 30%, rgba(246, 233, 204, 0.5), transparent 70%);
-      animation: pearl 16s ease-in-out infinite alternate;
+        var(--card);
     }
 
-    @property --pearl { syntax: "<percentage>"; inherits: false; initial-value: 70%; }
-    @keyframes pearl { from { --pearl: 20%; } to { --pearl: 80%; } }
+    /* Pearly sheen drifting slowly across the card. */
+    .card-pearl {
+      left: 0;
+      top: 0;
+      width: 70%;
+      height: 60%;
+      background: radial-gradient(closest-side, rgba(246, 233, 204, 0.5), transparent);
+      animation: pearl 16s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+
+    @keyframes pearl { from { transform: translate(-10%, 0); } to { transform: translate(55%, 10%); } }
+
+    /* Soft light under the cursor: moved with transform, faded with opacity. */
+    .card-spot {
+      left: 0;
+      top: 0;
+      width: 520px;
+      height: 520px;
+      margin: -260px 0 0 -260px;
+      background: radial-gradient(closest-side, rgba(246, 233, 204, 0.55), transparent);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      will-change: transform, opacity;
+    }
+
+    .instruction.glow .card-glow, .instruction.glow .card-spot { opacity: 1; }
 
     @media (prefers-reduced-motion: reduce) {
-      .instruction, .instruction::before { animation: none; }
-      .instruction, .instruction::after { transition: none; }
+      .card-spin::before, .card-pearl { animation: none; }
+      .card-glow, .card-spot { transition: none; }
     }
 
     p {
@@ -505,6 +555,7 @@
 <body>
   <canvas id="space" aria-hidden="true"></canvas>
   <div class="header">
+    <div class="header-sheen" aria-hidden="true"></div>
     <div class="border">
       <div class="logo-wrap">
         <svg class="ripples" viewBox="0 0 900 900" aria-hidden="true">
@@ -528,6 +579,9 @@
 
   <main class="main">
     <div class="instruction">
+      <div class="card-fx card-glow" aria-hidden="true"></div>
+      <div class="card-fx card-spin" aria-hidden="true"></div>
+      <div class="card-fx card-surface" aria-hidden="true"><div class="card-pearl"></div><div class="card-spot"></div></div>
       <p class="lead">Record a 20–30 second selfie video, then upload it.</p>
       <ul class="steps">
         <li>Face the camera with your whole face in the frame.</li>
@@ -620,29 +674,53 @@
 
   <script>
     // Card: tilts so the spot under the cursor dips away, as if pressed there (starts a little outside
-    // the card), and glows while the cursor is inside it. Mouse only; no tilt when reduced motion is on.
+    // the card), and glows while the cursor is inside it. The tilt eases toward the cursor once per
+    // animation frame, so it stays smooth however fast the mouse moves. Mouse only; no tilt with
+    // reduced motion.
     (() => {
-      const card = document.querySelector('.instruction'), NEAR = 60, MAX = 4;   // px around the card, max degrees
+      const card = document.querySelector('.instruction'), spot = card.querySelector('.card-spot');
+      const NEAR = 60, MAX = 4, EASE = 0.12;          // px around the card, max degrees, share of the gap closed per frame
       const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
       const clamp = v => Math.max(-1, Math.min(1, v));
-      const reset = () => { card.classList.remove('tilting', 'glow'); card.style.transform = ''; };
+      const target = { rx: 0, ry: 0, s: 1 }, now = { rx: 0, ry: 0, s: 1 };
+      let box = null, running = false;
+
+      // untransformed position (from the card's offset parent), so the tilt itself doesn't move the target
+      function measure() {
+        const op = card.offsetParent, base = op.getBoundingClientRect();
+        box = { left: base.left + op.clientLeft + card.offsetLeft, top: base.top + op.clientTop + card.offsetTop,
+                w: card.offsetWidth, h: card.offsetHeight };
+      }
+      function step() {
+        let moving = false;
+        for (const k of ['rx', 'ry', 's']) {
+          const d = target[k] - now[k];
+          if (Math.abs(d) > (k === 's' ? 0.0002 : 0.01)) { now[k] += d * EASE; moving = true; } else now[k] = target[k];
+        }
+        card.style.transform = now.rx || now.ry || now.s !== 1
+          ? `rotateX(${now.rx.toFixed(3)}deg) rotateY(${now.ry.toFixed(3)}deg) scale(${now.s.toFixed(4)})` : '';
+        running = moving;
+        if (moving) requestAnimationFrame(step);
+      }
+      const kick = () => { if (!running) { running = true; requestAnimationFrame(step); } };
+      function aim(rx, ry, s) { target.rx = rx; target.ry = ry; target.s = s; if (!still) kick(); }
+
       addEventListener('pointermove', e => {
         if (e.pointerType !== 'mouse') return;
-        // untransformed position (from the card's offset parent), so the tilt itself doesn't move the target
-        const op = card.offsetParent, base = op.getBoundingClientRect();
-        const left = base.left + op.clientLeft + card.offsetLeft, top = base.top + op.clientTop + card.offsetTop;
-        const w = card.offsetWidth, h = card.offsetHeight;
-        const x = e.clientX - left, y = e.clientY - top;
-        if (x < -NEAR || y < -NEAR || x > w + NEAR || y > h + NEAR) { if (card.style.transform || card.classList.contains('glow')) reset(); return; }
-        const inside = x >= 0 && y >= 0 && x <= w && y <= h;
+        if (!box) measure();
+        const x = e.clientX - box.left, y = e.clientY - box.top;
+        if (x < -NEAR || y < -NEAR || x > box.w + NEAR || y > box.h + NEAR) {
+          card.classList.remove('glow'); aim(0, 0, 1); return;
+        }
+        const inside = x >= 0 && y >= 0 && x <= box.w && y <= box.h;
         card.classList.toggle('glow', inside);
-        card.style.setProperty('--mx', `${x}px`); card.style.setProperty('--my', `${y}px`);
-        if (still) return;
-        const px = clamp((x - w / 2) / (w / 2)), py = clamp((y - h / 2) / (h / 2));
-        card.classList.add('tilting');
-        card.style.transform = `rotateX(${(-py * MAX).toFixed(2)}deg) rotateY(${(px * MAX).toFixed(2)}deg) scale(${inside ? 0.99 : 1})`;
-      });
-      document.documentElement.addEventListener('mouseleave', reset);
+        if (inside) spot.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        aim(-clamp((y - box.h / 2) / (box.h / 2)) * MAX, clamp((x - box.w / 2) / (box.w / 2)) * MAX, inside ? 0.99 : 1);
+      }, { passive: true });
+      // the card moves or changes size: measure again on the next mouse move
+      for (const ev of ['scroll', 'resize']) addEventListener(ev, () => { box = null; }, { passive: true });
+      new ResizeObserver(() => { box = null; }).observe(card);
+      document.documentElement.addEventListener('mouseleave', () => { card.classList.remove('glow'); aim(0, 0, 1); });
     })();
 
     // Header: the logo's shadow drifts away from the cursor, as if the cursor were a light.
