@@ -6,6 +6,8 @@
   <title>About · Fair Vitals</title>
   <meta name="description" content="How Fair Vitals measures heart rate from video, what is new in this project, and what has not been proved.">
   <link rel="stylesheet" href="/static/css/site.css">
+  <!-- first visit (or ?intro in the address): hide the page until the intro (intro.js) has played -->
+  <script>try { if (!localStorage.getItem('fv-intro-seen') || /[?&]intro\b/.test(location.search)) document.documentElement.classList.add('intro-on'); } catch (e) {}</script>
 </head>
 
 <body>
@@ -254,6 +256,7 @@
     Numbers as of October 2026.
   </footer>
 
+  <script src="/static/js/intro.js"></script>
   <script src="/static/js/site.js"></script>
 </body>
 </html>

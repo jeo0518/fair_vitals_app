@@ -6,6 +6,8 @@
   <title>Fair Vitals</title>
   <meta name="description" content="Estimate your heart rate from a short selfie video, with a trust check that tells you when the reading isn't reliable.">
   <link rel="stylesheet" href="/static/css/site.css">
+  <!-- first visit (or ?intro in the address): hide the page until the intro (intro.js) has played -->
+  <script>try { if (!localStorage.getItem('fv-intro-seen') || /[?&]intro\b/.test(location.search)) document.documentElement.classList.add('intro-on'); } catch (e) {}</script>
 </head>
 
 <body>
@@ -104,9 +106,10 @@
   </main>
 
   <footer class="site-footer">
-    Fair Vitals is a student research project, not a medical device. <a href="/about#limits">What it can't do yet</a>
+    Fair Vitals is a student research project, not a medical device. <a href="/about#limits">What it can't do yet</a> · <a href="/?intro">Watch the intro again</a>
   </footer>
 
+  <script src="/static/js/intro.js"></script>
   <script src="/static/js/site.js"></script>
   <script src="/static/js/measure.js"></script>
 </body>

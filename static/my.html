@@ -6,6 +6,8 @@
   <title>My page · Fair Vitals</title>
   <meta name="description" content="Log in to Fair Vitals or create an account.">
   <link rel="stylesheet" href="/static/css/site.css">
+  <!-- first visit (or ?intro in the address): hide the page until the intro (intro.js) has played -->
+  <script>try { if (!localStorage.getItem('fv-intro-seen') || /[?&]intro\b/.test(location.search)) document.documentElement.classList.add('intro-on'); } catch (e) {}</script>
 </head>
 
 <body>
@@ -133,6 +135,7 @@
     Fair Vitals is a student research project, not a medical device.
   </footer>
 
+  <script src="/static/js/intro.js"></script>
   <script src="/static/js/site.js"></script>
   <script src="/static/js/my.js"></script>
 </body>

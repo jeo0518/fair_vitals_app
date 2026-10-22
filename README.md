@@ -19,6 +19,7 @@ same 17 trust features, same heart-rate estimate.
 - `static/index.html`: the home page (short explanation + the video upload).
 - `static/about.html`: the about page (architecture, what's new, limitations).
 - `static/css/site.css`, `static/js/site.js`: the shared look and effects of every page.
+- `static/js/intro.js`: the first-visit intro (warp flight to a beating heart planet). Plays once per browser; add `?intro` to the address to see it again.
 - `static/js/measure.js`: uploading a video, showing the result, and saving it (home page: the page turns to the verdict and advice).
 - `static/my.html`, `static/js/my.js`: My page (log in, create an account, your age, the pulse log chart and daily list).
 - `auth.py`: accounts and logins (with age), stored in PostgreSQL.
