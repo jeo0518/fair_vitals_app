@@ -1,179 +1,348 @@
 <!doctype html>
-  <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Fair Vitals (test)</title>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,356;1,14..32,356&display=swap');
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fair Vitals (test)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap');
 
-      body {
-        font-family: "Inter", sans-serif;
-        font-optical-sizing: auto;
-        font-style: normal;
+    :root {
+      --bg: #F4F1EC;
+      --gold: #C9AE7B;
+      --gold-dark: #A88D5C;
+      --ink: #10201D;
+      --muted: #5F6B68;
+      --card: #FBFAF7;
+      --ok: #2F6B4F;
+      --bad: #9A4A3A;
+    }
 
-        margin: 0;
+    * { box-sizing: border-box; }
 
-        background-color: #F4F1EC;
-      }
+    body {
+      font-family: "Inter", sans-serif;
+      font-optical-sizing: auto;
+      margin: 0;
+      background-color: var(--bg);
+      color: var(--ink);
+    }
 
-      table {
-        border-collapse: collapse;
-        margin-top: 8px;
-      }
+    /* ---------- header ---------- */
+    .header {
+      padding: 16px;
+      background-color: var(--gold);
+    }
 
-      td, th {
-        border: 1px solid #ccc;
-        padding: 4px 8px;
-        text-align: right;
-      }
+    .border {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 20px;
+      border: 5px solid white;
+      border-radius: 10px;
+    }
 
-      .muted {
-        color: #666;
-        font-size: 0.9em;
-      }
+    .header-image {
+      width: 72px;
+      flex-shrink: 0;
+      filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
+    }
 
-      .header {
-        width: 100vw;
-        height: 20vh;
+    h1 {
+      margin: 0;
+      font-weight: 600;
+      color: #FFFFFF;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      white-space: nowrap;
+    }
 
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .line-sector {
+      position: relative;
+      flex: 1;
+      min-width: 60px;
+      max-width: 430px;
+      height: 3px;
+      margin: 0 8px;
+      background: #FFFFFF;
+      filter: drop-shadow(0px 8px 12px rgba(0, 0, 0, 0.5));
+    }
 
-        background-color: #C9AE7B;
-      }
+    .line-sector::before, .line-sector::after {
+      content: "";
+      position: absolute;
+      top: -5px;
+      width: 7px;
+      height: 7px;
+      border: 3px solid #FFFFFF;
+      border-radius: 50%;
+    }
 
-      .header-image {
-        width: 7%;
-        margin: 10px;
-        filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
-      }
+    .line-sector::before { left: -10px; }
+    .line-sector::after { right: -10px; }
 
-      h1 {
-        font-weight: 600;
-        color: #FFFFFF;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        margin: 5px;
-      }
+    .nav {
+      display: flex;
+      gap: 32px;
+    }
 
-      .fadeout {
-        width: 100vw;
-        height: 5vh;
-        background: linear-gradient(to bottom, #C9AE7B, rgba(0, 0, 0, 0));
-      }
-      
-      .border {
-        width: 97%;
-        height: 80%;
-        border: 5px solid white;
-        border-radius: 10px;
+    .nav a {
+      font-size: 1.5em;
+      font-weight: 500;
+      color: #FFFFFF;
+      text-decoration: none;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
 
-        display: flex;
-        align-items: center;
-      }
+    .nav a:hover { text-decoration: underline; text-underline-offset: 6px; }
 
-      .line-sector {
-        filter: drop-shadow(0px 8px 12px rgba(0, 0, 0, 0.5));
-      }
+    .fadeout {
+      height: 5vh;
+      background: linear-gradient(to bottom, var(--gold), rgba(0, 0, 0, 0));
+    }
 
-      h2 {
-        font-weight: 500;
-        color: #FFFFFF;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        margin: 20px;
-      }
+    /* ---------- main card ---------- */
+    .main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 16px 16px 48px;
+    }
 
-      p {
-        font-weight: 300;
-        color: #10201D;
-      }
+    .instruction {
+      padding: 28px;
+      border: 3px solid var(--ink);
+      border-radius: 10px;
+      background: var(--card);
+    }
 
-      .instruction {
-        width: 97%;
-        height: 95%;
-        border: 3px solid #10201D;
+    p {
+      font-weight: 300;
+      line-height: 1.5;
+    }
 
-        border-radius: 10px;
-        
-        margin: 50px 20px 20px 20px;
-        padding: 20px;
-      }
+    .lead { margin-top: 0; font-size: 1.1em; }
 
-      .main {
-        width: 100%;
-        height: 500px;
+    .steps {
+      margin: 0 0 24px;
+      padding-left: 20px;
+      font-weight: 300;
+      line-height: 1.7;
+    }
 
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-    </style>
-  </head>
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
 
-  <body>
-    <div class="header">
-      <div class="border">
-        <img class="header-image"src="source/fair_vitals_logo.png" alt="fair vitals logo">
-        <h1>Fair Vitals</h1>
-        <svg class="line-sector" width="430" height="200" viewBox="0 0 400 200">
-          <line x1="20" y1="100" x2="400" y2="100" stroke="#FFFFFF" stroke-width="3" />
-          <circle cx="16" cy="100" r="4" fill="transparent" stroke="#FFFFFF" stroke-width="3" />
-          <circle cx="404" cy="100" r="4" fill="transparent" stroke="#FFFFFF" stroke-width="3" />
-        </svg>
-        <h2>About</h2>
-        <h2>My page</h2>
-        <h2>Help</h2>
+    #video { display: none; }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      font: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      background: transparent;
+      color: var(--ink);
+    }
+
+    .btn:hover { background: #EDE6DA; }
+
+    .btn-primary {
+      border-color: var(--gold-dark);
+      background: var(--gold);
+      color: #FFFFFF;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.35);
+    }
+
+    .btn-primary:hover { background: var(--gold-dark); }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+
+    .file-name {
+      color: var(--muted);
+      font-weight: 300;
+      overflow-wrap: anywhere;
+    }
+
+    #status { min-height: 1.5em; margin: 16px 0 0; color: var(--muted); }
+
+    /* ---------- result ---------- */
+    #result:empty { display: none; }
+
+    #result {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 2px solid #E4DDD0;
+    }
+
+    .hr {
+      margin: 0;
+      font-size: 2.6em;
+      font-weight: 600;
+    }
+
+    .hr small { font-size: 0.45em; font-weight: 400; color: var(--muted); }
+
+    .verdict {
+      display: inline-block;
+      margin: 8px 0 16px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.9em;
+      font-weight: 500;
+      color: #FFFFFF;
+    }
+
+    .verdict.ok { background: var(--ok); }
+    .verdict.bad { background: var(--bad); }
+
+    .meter {
+      position: relative;
+      height: 10px;
+      margin: 8px 0 6px;
+      border-radius: 5px;
+      background: #E4DDD0;
+    }
+
+    .meter-fill { height: 100%; border-radius: 5px; background: var(--gold); }
+    .meter-mark { position: absolute; top: -4px; width: 2px; height: 18px; background: var(--ink); }
+
+    .tips {
+      margin: 16px 0;
+      padding: 12px 16px 12px 36px;
+      border-left: 4px solid var(--gold);
+      border-radius: 6px;
+      background: #F1EBDF;
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    details { margin-top: 16px; }
+    summary { cursor: pointer; font-weight: 500; }
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 0.9em;
+    }
+
+    td, th {
+      border: 1px solid #DDD5C6;
+      padding: 4px 8px;
+      text-align: right;
+    }
+
+    th { background: #F1EBDF; font-weight: 500; }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.9em;
+    }
+
+    .footnote { margin: 20px 0 0; }
+
+    /* ---------- phones ---------- */
+    @media (max-width: 720px) {
+      .line-sector { display: none; }
+      .border { flex-wrap: wrap; justify-content: center; gap: 8px 12px; }
+      .header-image { width: 48px; }
+      .nav { width: 100%; justify-content: center; gap: 24px; }
+      .nav a { font-size: 1.1em; }
+      .instruction { padding: 20px; }
+      .hr { font-size: 2.1em; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <div class="border">
+      <img class="header-image" src="source/fair_vitals_logo.png" alt="Fair Vitals logo">
+      <h1>Fair Vitals</h1>
+      <div class="line-sector" aria-hidden="true"></div>
+      <nav class="nav">
+        <a href="#">About</a>
+        <a href="#">My page</a>
+        <a href="#">Help</a>
+      </nav>
+    </div>
+  </div>
+  <div class="fadeout"></div>
+
+  <main class="main">
+    <div class="instruction">
+      <p class="lead">Record a 20–30 second selfie video, then upload it.</p>
+      <ul class="steps">
+        <li>Face the camera with your whole face in the frame.</li>
+        <li>Stay still and hold the phone steady.</li>
+        <li>Use steady, even light (daylight from a window works well).</li>
+      </ul>
+      <div class="controls">
+        <label for="video" class="btn">Choose video</label>
+        <input type="file" id="video" accept="video/*">
+        <button id="go" class="btn btn-primary">Analyze</button>
+        <span id="file-name" class="file-name">No video chosen</span>
       </div>
+      <p id="status" role="status"></p>
+      <div id="result"></div>
+      <p class="muted footnote">Your video is deleted from the server right after analysis. Not a medical device.</p>
     </div>
-    <div class="fadeout">
-    </div>
-    <div class="main">
-      <div class="instruction">
-        <p>Record a 20–30 second selfie video: face the camera, stay still, in steady light. Then upload it.</p>
-        <input type="file" id="video" accept="video/*" capture="user">
-        <button id="go">Analyze</button>
-        <p id="status"></p>
-      </div>
-    </div>
-    <div id="result"></div>
-    <p class="muted">Your video is deleted from the server right after analysis. Not a medical device.</p>
+  </main>
 
-    <script>
-      const $ = id => document.getElementById(id);
-      $('go').onclick = async () => {
-        const file = $('video').files[0];
-        if (!file) { $('status').textContent = 'Choose a video first.'; return; }
-        $('status').textContent = 'Uploading and analyzing… (can take a while on a CPU server)';
-        $('result').innerHTML = '';
-        const form = new FormData(); form.append('video', file);
-        try {
-          const res = await fetch('analyze', { method: 'POST', body: form });
-          const r = await res.json();
-          $('status').textContent = '';
-          if (!r.ok && !r.readings) { $('result').textContent = r.message || 'Something went wrong.'; return; }
-          let html = '';
-          if (r.heart_rate_bpm !== null) {
-            html += `<h2>Heart rate: ${r.heart_rate_bpm} BPM</h2>`;
-          } else {
-            html += `<h2>No reliable reading</h2><p>${r.message || ''}</p>`;
-          }
-          html += `<p><b>Trust score:</b> ${(r.trust_score * 100).toFixed(0)}% `
-                + `(${r.readings_reliable} of ${r.readings_total} ten-second readings passed; `
-                + `threshold ${(r.threshold * 100).toFixed(0)}%)</p>`;
-          if (r.tips.length) html += '<p><b>Tips:</b></p><ul>' + r.tips.map(t => `<li>${t}</li>`).join('') + '</ul>';
-          html += '<details><summary>Per-reading details</summary><table><tr><th>start (s)</th><th>heart rate</th>'
-                + '<th>trust</th><th>accepted</th><th>CNN</th><th>POS</th><th>flicker</th></tr>'
-                + r.readings.map(w => `<tr><td>${w.start_s}</td><td>${w.hr_bpm}</td><td>${(w.p_reliable * 100).toFixed(0)}%</td>`
-                  + `<td>${w.reliable ? 'yes' : 'no'}</td><td>${w.hr_cnn}</td><td>${w.hr_pos}</td><td>${w.flicker ? 'yes' : ''}</td></tr>`).join('')
-                + '</table>'
-                + `<p class="muted">Reading from: ${r.details.estimate}. CNN: ${r.details.cnn}. `
-                + `Face detector: ${r.details.face_detector}. Video length analyzed: ${r.duration_s} s.</p></details>`;
-          $('result').innerHTML = html;
-        } catch (e) {
-          $('status').textContent = 'Request failed: ' + e;
+  <script>
+    const $ = id => document.getElementById(id);
+    $('video').onchange = () => {
+      const file = $('video').files[0];
+      $('file-name').textContent = file ? file.name : 'No video chosen';
+    };
+    $('go').onclick = async () => {
+      const file = $('video').files[0];
+      if (!file) { $('status').textContent = 'Choose a video first.'; return; }
+      $('status').textContent = 'Uploading and analyzing… (can take a while on a CPU server)';
+      $('result').innerHTML = '';
+      $('go').disabled = true;
+      const form = new FormData(); form.append('video', file);
+      try {
+        const res = await fetch('analyze', { method: 'POST', body: form });
+        const text = await res.text();
+        let r;
+        try { r = JSON.parse(text); } catch { throw new Error(`server replied ${res.status} ${res.statusText}`); }
+        $('status').textContent = '';
+        if (!r.ok && !r.readings) { $('result').innerHTML = `<p>${r.message || 'Something went wrong.'}</p>`; return; }
+        const trust = Math.round(r.trust_score * 100), threshold = Math.round(r.threshold * 100);
+        let html = '';
+        if (r.heart_rate_bpm !== null) {
+          html += `<h2 class="hr">${r.heart_rate_bpm} <small>BPM</small></h2>`
+                + '<span class="verdict ok">Reliable reading</span>';
+        } else {
+          html += '<h2 class="hr">No reliable reading</h2>'
+                + `<span class="verdict bad">Please retake</span><p>${r.message || ''}</p>`;
         }
-      };
-    </script>
-  </body>
+        html += `<p><b>Trust score:</b> ${trust}%</p>`
+              + `<div class="meter"><div class="meter-fill" style="width:${trust}%"></div>`
+              + `<div class="meter-mark" style="left:${threshold}%" title="threshold ${threshold}%"></div></div>`
+              + `<p class="muted">${r.readings_reliable} of ${r.readings_total} ten-second readings passed `
+              + `the ${threshold}% threshold (black mark).</p>`;
+        if (r.tips.length) html += '<ul class="tips">' + r.tips.map(t => `<li>${t}</li>`).join('') + '</ul>';
+        html += '<details><summary>Per-reading details</summary><div class="table-wrap"><table><tr><th>start (s)</th><th>heart rate</th>'
+              + '<th>trust</th><th>accepted</th><th>CNN</th><th>POS</th><th>flicker</th></tr>'
+              + r.readings.map(w => `<tr><td>${w.start_s}</td><td>${w.hr_bpm}</td><td>${(w.p_reliable * 100).toFixed(0)}%</td>`
+                + `<td>${w.reliable ? 'yes' : 'no'}</td><td>${w.hr_cnn}</td><td>${w.hr_pos}</td><td>${w.flicker ? 'yes' : ''}</td></tr>`).join('')
+              + '</table></div>'
+              + `<p class="muted">Reading from: ${r.details.estimate}. CNN: ${r.details.cnn}. `
+              + `Face detector: ${r.details.face_detector}. Video length analyzed: ${r.duration_s} s.</p></details>`;
+        $('result').innerHTML = html;
+      } catch (e) {
+        $('status').textContent = 'Request failed: ' + e.message;
+      } finally {
+        $('go').disabled = false;
+      }
+    };
+  </script>
+</body>
 </html>
