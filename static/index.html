@@ -49,22 +49,107 @@
     .header {
       --sx: 2px;
       --sy: 2px;
+      position: relative;
+      isolation: isolate;
       padding: 16px;
-      background-color: var(--gold);
     }
 
+    /* Gold surface: warm light from the top left, faint star dust, a slow drifting sheen.
+       It reaches below the header and fades out, so the header melts into the space behind. */
+    .header::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 -56px 0;
+      z-index: -1;
+      background:
+        radial-gradient(1.5px 1.5px at 8% 22%, #FFFFFF, transparent),
+        radial-gradient(2px 2px at 19% 78%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(1.5px 1.5px at 31% 12%, #FFFFFF, transparent),
+        radial-gradient(1px 1px at 37% 58%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(2px 2px at 46% 86%, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(1.5px 1.5px at 52% 20%, #FFFFFF, transparent),
+        radial-gradient(1px 1px at 61% 72%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(2px 2px at 68% 8%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(1.5px 1.5px at 79% 90%, #FFFFFF, transparent),
+        radial-gradient(1px 1px at 88% 40%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(2px 2px at 96% 16%, #FFFFFF, transparent),
+        radial-gradient(ellipse 40% 120% at var(--sheen, 30%) 0%, rgba(255, 244, 220, 0.5), transparent 70%),
+        radial-gradient(ellipse 30% 90% at 4% 50%, rgba(255, 248, 230, 0.35), transparent 70%),
+        linear-gradient(160deg, #DCC69C 0%, var(--gold) 45%, #B4955F 100%);
+      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 72px), transparent);
+      mask-image: linear-gradient(to bottom, #000 calc(100% - 72px), transparent);
+      animation: sheen 14s ease-in-out infinite alternate;
+    }
+
+    /* Orbit lines with two small planets circling slowly behind the menu. */
+    .header::after {
+      content: "";
+      position: absolute;
+      inset: 0 0 -56px 0;
+      z-index: -1;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='300' viewBox='0 0 700 300'%3E%3Cg transform='rotate%28-9 350 150%29' fill='none' stroke='white'%3E%3Cpath d='M20,150 a330,92 0 1,0 660,0 a330,92 0 1,0 -660,0' stroke-opacity='0.42' stroke-width='1.2'/%3E%3Cpath d='M110,150 a240,64 0 1,0 480,0 a240,64 0 1,0 -480,0' stroke-opacity='0.32' stroke-width='1'/%3E%3Cpath d='M200,150 a150,36 0 1,0 300,0 a150,36 0 1,0 -300,0' stroke-opacity='0.38' stroke-width='1' stroke-dasharray='2 6'/%3E%3Ccircle r='4.5' fill='white' fill-opacity='0.85' stroke='none'%3E%3CanimateMotion dur='38s' repeatCount='indefinite' path='M20,150 a330,92 0 1,0 660,0 a330,92 0 1,0 -660,0'/%3E%3C/circle%3E%3Ccircle r='3' fill='white' fill-opacity='0.75' stroke='none'%3E%3CanimateMotion dur='24s' repeatCount='indefinite' begin='-9s' path='M110,150 a240,64 0 1,0 480,0 a240,64 0 1,0 -480,0'/%3E%3C/circle%3E%3Ccircle cx='350' cy='150' r='7' fill='white' fill-opacity='0.35' stroke='none'/%3E%3C/g%3E%3C/svg%3E") right -40px center / 700px 300px no-repeat;
+      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 72px), transparent);
+      mask-image: linear-gradient(to bottom, #000 calc(100% - 72px), transparent);
+      pointer-events: none;
+    }
+
+    @property --sheen { syntax: "<percentage>"; inherits: false; initial-value: 30%; }
+    @keyframes sheen { from { --sheen: 15%; } to { --sheen: 85%; } }
+
     .border {
+      position: relative;
       display: flex;
       align-items: center;
       gap: 16px;
       padding: 12px 20px;
+      overflow: hidden;
       border: 5px solid white;
       border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: 0 0 18px rgba(255, 248, 230, 0.55), inset 0 0 22px rgba(255, 248, 230, 0.35);
+    }
+
+    /* Ripples spreading slowly from the logo, like a pulse moving through space. */
+    .logo-wrap {
+      position: relative;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .ripples {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 900px;
+      height: 900px;
+      margin: -450px 0 0 -450px;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .ripples circle {
+      fill: none;
+      stroke: #FFFFFF;
+      stroke-width: 1.6;
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: ripple 9s linear infinite;
+      opacity: 0;
+    }
+
+    .ripples circle:nth-child(2) { animation-delay: -2.25s; }
+    .ripples circle:nth-child(3) { animation-delay: -4.5s; }
+    .ripples circle:nth-child(4) { animation-delay: -6.75s; }
+
+    @keyframes ripple {
+      0% { transform: scale(0.12); opacity: 0; }
+      10% { opacity: 0.8; }
+      100% { transform: scale(1); opacity: 0; }
     }
 
     .header-image {
       width: 72px;
-      flex-shrink: 0;
       filter: drop-shadow(var(--sx) var(--sy) 4px rgba(0, 0, 0, 0.5));
       transition: filter 0.8s ease-out;
     }
@@ -73,9 +158,9 @@
       margin: 0;
       font-weight: 600;
       color: #FFFFFF;
-      text-shadow: var(--sx) var(--sy) 4px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.01em;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5), 0 0 18px rgba(255, 248, 230, 0.6);
       white-space: nowrap;
-      transition: text-shadow 0.8s ease-out;
     }
 
     .line-sector {
@@ -101,6 +186,26 @@
 
     .line-sector::before { left: -10px; }
     .line-sector::after { right: -10px; }
+
+    /* A small light travelling along the line, like a signal. */
+    .line-sector .spark {
+      position: absolute;
+      top: -3px;
+      width: 40px;
+      height: 9px;
+      margin-left: -20px;
+      border-radius: 50%;
+      background: radial-gradient(closest-side, #FFFFFF, rgba(255, 255, 255, 0));
+      box-shadow: 0 0 12px 3px rgba(255, 248, 230, 0.8);
+      animation: spark 4.5s ease-in-out infinite;
+    }
+
+    @keyframes spark {
+      0% { left: 0; opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { left: 100%; opacity: 0; }
+    }
 
     .nav {
       display: flex;
@@ -135,13 +240,13 @@
     .nav a:hover::after, .nav a:focus-visible::after { transform: scaleX(1); }
 
     @media (prefers-reduced-motion: reduce) {
-      .header-image, h1, .nav a::after { transition: none; }
+      .header-image, .nav a::after { transition: none; }
+      .header::before, .ripples circle, .line-sector .spark { animation: none; }
+      .ripples circle:first-child { opacity: 0.3; transform: scale(0.35); }
+      .line-sector .spark { display: none; }
     }
 
-    .fadeout {
-      height: 5vh;
-      background: linear-gradient(to bottom, var(--gold), rgba(0, 0, 0, 0));
-    }
+    .fadeout { height: 40px; }
 
     /* ---------- main card ---------- */
     .main {
@@ -291,6 +396,7 @@
     /* ---------- phones ---------- */
     @media (max-width: 720px) {
       .line-sector { display: none; }
+      .header::after { background-position: right -330px top -40px; }
       .border { flex-wrap: wrap; justify-content: center; gap: 8px 12px; }
       .header-image { width: 48px; }
       .nav { width: 100%; justify-content: center; gap: 24px; }
@@ -305,9 +411,17 @@
   <canvas id="space" aria-hidden="true"></canvas>
   <div class="header">
     <div class="border">
-      <img class="header-image" src="source/fair_vitals_logo.png" alt="Fair Vitals logo">
+      <div class="logo-wrap">
+        <svg class="ripples" viewBox="0 0 900 900" aria-hidden="true">
+          <circle cx="450" cy="450" r="440" />
+          <circle cx="450" cy="450" r="440" />
+          <circle cx="450" cy="450" r="440" />
+          <circle cx="450" cy="450" r="440" />
+        </svg>
+        <img class="header-image" src="source/fair_vitals_logo.png" alt="Fair Vitals logo">
+      </div>
       <h1>Fair Vitals</h1>
-      <div class="line-sector" aria-hidden="true"></div>
+      <div class="line-sector" aria-hidden="true"><span class="spark"></span></div>
       <nav class="nav">
         <a href="#">About</a>
         <a href="#">My page</a>
@@ -389,7 +503,7 @@
   </script>
 
   <script>
-    // Header: the logo's and title's shadow drifts away from the cursor, as if the cursor were a light.
+    // Header: the logo's shadow drifts away from the cursor, as if the cursor were a light.
     (() => {
       const header = document.querySelector('.header'), logo = document.querySelector('.header-image');
       const MAX = 8, REACH = 160;      // px of shadow offset, px of cursor distance for the full offset
