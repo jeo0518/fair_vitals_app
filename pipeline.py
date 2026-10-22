@@ -9,7 +9,7 @@ Models are read from ./models:
   - trust_model_refiner.joblib    (trust model trained on the refiner's readings)
   - face_detection_yunet_2023mar.onnx (downloaded automatically if missing)
 """
-import os, sys, json, subprocess, tempfile, shutil, urllib.request
+import os, sys, json, subprocess, tempfile, shutil, time, urllib.request
 import numpy as np
 import pandas as pd
 import fair_vitals_core as fv
@@ -21,6 +21,7 @@ YUNET = os.path.join(MODEL_DIR, 'face_detection_yunet_2023mar.onnx')
 
 FPS = fv.FPS
 MAX_SEC = 60          # analyse at most the first 60 s of a video
+WORKER_TIMEOUT = 240  # seconds allowed for decoding the video and cropping the face, per attempt
 DARK_LUM = 45         # face-centre brightness (0-255) below which we ask for more light (app rule, not the model)
 
 # ---------------------------------------------------------------- models
@@ -43,7 +44,12 @@ def face_clip(video_path, workdir):
         job = {'mode': 'video', 'path': video_path, 'out': out, 'detector': det, 'yunet_path': YUNET,
                'fps': FPS, 'img_size': fv.IMG_SIZE, 'det_every': fv.DET_EVERY, 'max_sec': MAX_SEC,
                'max_side': 960}
-        r = subprocess.run([sys.executable, WORKER, json.dumps(job)], capture_output=True, text=True)
+        t0 = time.time()
+        try:
+            r = subprocess.run([sys.executable, WORKER, json.dumps(job)], capture_output=True, text=True, timeout=WORKER_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            raise RuntimeError(f'Reading the video took longer than {WORKER_TIMEOUT} s. Try a shorter or smaller video.')
+        print(f'  video decoded and face cropped ({det}) in {time.time() - t0:.1f} s', flush=True)
         if r.returncode == 0:
             frames = np.load(out + '_frames.npy'); stats = pd.read_csv(out + '_stats.csv')
             return frames, stats, det
@@ -75,13 +81,14 @@ def analyze(video_path, models):
     if len(frames) < W:
         return {'ok': False, 'message': f'That video is too short. We need at least {fv.WIN_SEC} seconds '
                                          f'(this one is {len(frames) / FPS:.1f} s).'}
-    rows = []
+    rows, t0 = [], time.time()
     for s in range(0, len(frames) - W + 1, S):
         fr = np.asarray(frames[s:s + W])
         r = fv.window_features(models.core, fr, stats.iloc[s:s + W])
         r['p_reliable'] = fv.trust_score(models.core, r)
         r['face_brightness'] = float(fv.ring_and_center(fr)[1].mean())   # app rule only, never a model input
         r['start_s'] = s / FPS; rows.append(r)
+    print(f'  {len(rows)} ten-second windows scored in {time.time() - t0:.1f} s', flush=True)
     df = pd.DataFrame(rows)
     df['reliable'] = df.p_reliable >= models.threshold
     dark = bool(df.face_brightness.median() < DARK_LUM)

@@ -10,13 +10,21 @@ $('video').onchange = () => {
 $('go').onclick = async () => {
   const file = $('video').files[0];
   if (!file) { $('status').textContent = 'Pick a video first.'; return; }
-  $('status').textContent = 'Uploading and analysing. This can take a minute…';
   $('result').innerHTML = '';
   lastResult = null;
   $('go').disabled = true;
   const form = new FormData(); form.append('video', file);
+  // count the seconds so a long wait doesn't look frozen; give up after 10 minutes
+  const started = Date.now(), mb = (file.size / 2 ** 20).toFixed(0);
+  const tick = () => {
+    const s = Math.round((Date.now() - started) / 1000);
+    $('status').textContent = `Uploading (${mb} MB) and analysing… ${s} s. This usually takes 1 to 3 minutes.`;
+  };
+  tick();
+  const timer = setInterval(tick, 1000), stop = new AbortController();
+  const limit = setTimeout(() => stop.abort(), 10 * 60 * 1000);
   try {
-    const res = await fetch('/analyze', { method: 'POST', body: form });
+    const res = await fetch('/analyze', { method: 'POST', body: form, signal: stop.signal });
     const text = await res.text();
     let r;
     try { r = JSON.parse(text); } catch { throw new Error(`server replied ${res.status} ${res.statusText}`); }
@@ -50,8 +58,12 @@ $('go').onclick = async () => {
     $('result').innerHTML = html;
     revealIn($('result'));
   } catch (e) {
-    $('status').textContent = "That didn't work (" + e.message + '). Please try again.';
+    $('status').textContent = e.name === 'AbortError'
+      ? "No result after 10 minutes, so we stopped waiting. The server may be busy or asleep. Please try again, or try a shorter video."
+      : "That didn't work (" + e.message + '). Please try again.';
   } finally {
+    clearInterval(timer);
+    clearTimeout(limit);
     $('go').disabled = false;
   }
 };

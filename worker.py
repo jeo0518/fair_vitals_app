@@ -62,7 +62,7 @@ if job['mode'] == 'video':
     fps_src = float(num) / float(den) if float(den) else FPS
     duration = float(info.get('format', {}).get('duration', 0) or 0)
     err = tempfile.TemporaryFile()
-    proc = subprocess.Popen(['ffmpeg', '-v', 'error', '-nostdin', '-i', path, '-t', str(job['max_sec']),
+    proc = subprocess.Popen(['ffmpeg', '-v', 'error', '-nostdin', '-threads', os.environ.get('FV_THREADS', '2'), '-i', path, '-t', str(job['max_sec']),
                              '-vf', f'fps={FPS},scale={w}:{h}', '-f', 'rawvideo', '-pix_fmt', 'rgb24', 'pipe:1'],
                             stdout=subprocess.PIPE, stderr=err, bufsize=10 ** 8)
     recent, k, nbytes = [], 0, w * h * 3
