@@ -1123,22 +1123,24 @@ html.intro-on body > :not(#intro) { visibility: hidden; animation: intro-failsaf
 .note.warn, .note.urgent { --edge: rgba(154, 74, 58, 0.6); }
 .pipe-window { border-width: 1px; }
 
-/* the glare: a soft band of light that sweeps across once when the cursor comes in */
+/* a soft gold light that follows the cursor inside the box (site.js sets --mx / --my). It sits under the
+   text (z-index -1 inside the box's own stacking context), so words never get washed out. */
+.point, .stat, .note, .tips, .pipe-step { isolation: isolate; }
+
 .point::after, .stat::after, .note::after, .tips::after, .pipe-step::after {
   content: "";
   position: absolute;
-  top: -20%;
-  bottom: -20%;
-  left: 0;
-  width: 45%;
-  background: linear-gradient(100deg, transparent 10%, rgba(232, 200, 140, 0.35) 35%, rgba(255, 255, 255, 0.95) 50%, rgba(232, 200, 140, 0.35) 65%, transparent 90%);
-  transform: translateX(-160%) skewX(-12deg);
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(circle 140px at var(--mx, 50%) var(--my, 50%), rgba(255, 236, 196, 0.85), rgba(232, 200, 140, 0.25) 45%, transparent 75%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
   pointer-events: none;
 }
 
-.point:hover::after, .stat:hover::after, .note:hover::after, .tips:hover::after, .pipe-step:hover::after {
-  transform: translateX(330%) skewX(-12deg);
-  transition: transform 0.9s cubic-bezier(0.3, 0.6, 0.3, 1);
+.point:hover::after, .stat:hover::after, .note:hover::after, .tips:hover::after, .pipe-step:hover::after { opacity: 1; }
+.note.warn::after, .note.urgent::after {
+  background: radial-gradient(circle 140px at var(--mx, 50%) var(--my, 50%), rgba(255, 226, 214, 0.9), rgba(214, 150, 130, 0.2) 45%, transparent 75%);
 }
 
 .point:hover, .stat:hover, .note:hover, .tips:hover, .pipe-step:hover {
@@ -1148,6 +1150,4 @@ html.intro-on body > :not(#intro) { visibility: hidden; animation: intro-failsaf
 
 .note.warn:hover, .note.urgent:hover { border-color: var(--bad); box-shadow: 0 0 14px rgba(154, 74, 58, 0.3); }
 
-@media (prefers-reduced-motion: reduce) {
-  .point::after, .stat::after, .note::after, .tips::after, .pipe-step::after { display: none; }
-}
+

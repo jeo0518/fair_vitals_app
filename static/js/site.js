@@ -103,6 +103,16 @@
   revealIn(document);
 })();
 
+// Inner boxes: tell each box where the cursor is, for the soft light that follows it (site.css).
+addEventListener('pointermove', e => {
+  if (e.pointerType !== 'mouse') return;
+  const box = e.target.closest && e.target.closest('.point, .stat, .note, .tips, .pipe-step');
+  if (!box) return;
+  const r = box.getBoundingClientRect();
+  box.style.setProperty('--mx', `${e.clientX - r.left}px`);
+  box.style.setProperty('--my', `${e.clientY - r.top}px`);
+}, { passive: true });
+
 // Header: the logo's shadow drifts away from the cursor, as if the cursor were a light.
 (() => {
   const header = document.querySelector('.header'), logo = document.querySelector('.header-image');
