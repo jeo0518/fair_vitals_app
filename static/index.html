@@ -1,60 +1,138 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fair Vitals (test)</title>
-<style>
-  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 24px auto; padding: 0 16px; line-height: 1.4; }
-  table { border-collapse: collapse; margin-top: 8px; }
-  td, th { border: 1px solid #ccc; padding: 4px 8px; text-align: right; }
-  .muted { color: #666; font-size: 0.9em; }
-</style>
-</head>
-<body>
-<h1>Fair Vitals (test)</h1>
-<p>Record a 20–30 second selfie video: face the camera, stay still, in steady light. Then upload it.</p>
-<input type="file" id="video" accept="video/*" capture="user">
-<button id="go">Analyze</button>
-<p id="status"></p>
-<div id="result"></div>
-<p class="muted">Your video is deleted from the server right after analysis. Not a medical device.</p>
+  <html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fair Vitals (test)</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,356;1,14..32,356&display=swap');
 
-<script>
-const $ = id => document.getElementById(id);
-$('go').onclick = async () => {
-  const file = $('video').files[0];
-  if (!file) { $('status').textContent = 'Choose a video first.'; return; }
-  $('status').textContent = 'Uploading and analyzing… (can take a while on a CPU server)';
-  $('result').innerHTML = '';
-  const form = new FormData(); form.append('video', file);
-  try {
-    const res = await fetch('analyze', { method: 'POST', body: form });
-    const r = await res.json();
-    $('status').textContent = '';
-    if (!r.ok && !r.readings) { $('result').textContent = r.message || 'Something went wrong.'; return; }
-    let html = '';
-    if (r.heart_rate_bpm !== null) {
-      html += `<h2>Heart rate: ${r.heart_rate_bpm} BPM</h2>`;
-    } else {
-      html += `<h2>No reliable reading</h2><p>${r.message || ''}</p>`;
-    }
-    html += `<p><b>Trust score:</b> ${(r.trust_score * 100).toFixed(0)}% `
-          + `(${r.readings_reliable} of ${r.readings_total} ten-second readings passed; `
-          + `threshold ${(r.threshold * 100).toFixed(0)}%)</p>`;
-    if (r.tips.length) html += '<p><b>Tips:</b></p><ul>' + r.tips.map(t => `<li>${t}</li>`).join('') + '</ul>';
-    html += '<details><summary>Per-reading details</summary><table><tr><th>start (s)</th><th>heart rate</th>'
-          + '<th>trust</th><th>accepted</th><th>CNN</th><th>POS</th><th>flicker</th></tr>'
-          + r.readings.map(w => `<tr><td>${w.start_s}</td><td>${w.hr_bpm}</td><td>${(w.p_reliable * 100).toFixed(0)}%</td>`
-            + `<td>${w.reliable ? 'yes' : 'no'}</td><td>${w.hr_cnn}</td><td>${w.hr_pos}</td><td>${w.flicker ? 'yes' : ''}</td></tr>`).join('')
-          + '</table>'
-          + `<p class="muted">Reading from: ${r.details.estimate}. CNN: ${r.details.cnn}. `
-          + `Face detector: ${r.details.face_detector}. Video length analyzed: ${r.duration_s} s.</p></details>`;
-    $('result').innerHTML = html;
-  } catch (e) {
-    $('status').textContent = 'Request failed: ' + e;
-  }
-};
-</script>
-</body>
+      body {
+        font-family: "Inter", sans-serif;
+        font-optical-sizing: auto;
+        font-style: normal;
+
+        margin: 0;
+      }
+
+      table {
+        border-collapse: collapse;
+        margin-top: 8px;
+      }
+
+      td, th {
+        border: 1px solid #ccc;
+        padding: 4px 8px;
+        text-align: right;
+      }
+
+      .muted {
+        color: #666;
+        font-size: 0.9em;
+      }
+
+      .header {
+        width: 100vw;
+        height: 20vh;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background-color: #C9AE7B;
+      }
+
+      .header-image {
+        width: 7%;
+        margin: 10px;
+        filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
+      }
+
+      h1 {
+        font-weight: 600;
+        color: #FFFFFF;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        margin: 5px;
+      }
+
+      .fadeout {
+        width: 100vw;
+        height: 5vh;
+        background: linear-gradient(to bottom, #C9AE7B, rgba(0, 0, 0, 0));
+      }
+      
+      .border {
+        width: 97%;
+        height: 80%;
+        border: 5px solid white;
+        border-radius: 10px;
+
+        display: flex;
+        align-items: center;
+      }
+
+      .line-sector {
+        filter: drop-shadow(0px 8px 12px rgba(0, 0, 0, 0.5));
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="header">
+      <div class="border">
+        <img class="header-image"src="source/fair_vitals_logo.png" alt="fair vitals logo">
+        <h1>Fair Vitals</h1>
+        <svg class="line-sector" width="430" height="200" viewBox="0 0 400 200">
+          <line x1="20" y1="100" x2="400" y2="100" stroke="#FFFFFF" stroke-width="3" />
+          <circle cx="16" cy="100" r="4" fill="transparent" stroke="#FFFFFF" stroke-width="3" />
+          <circle cx="406" cy="100" r="4" fill="transparent" stroke="#FFFFFF" stroke-width="3" />
+        </svg>
+      </div>
+    </div>
+    <div class="fadeout">
+    </div>
+    <p>Record a 20–30 second selfie video: face the camera, stay still, in steady light. Then upload it.</p>
+    <input type="file" id="video" accept="video/*" capture="user">
+    <button id="go">Analyze</button>
+    <p id="status"></p>
+    <div id="result"></div>
+    <p class="muted">Your video is deleted from the server right after analysis. Not a medical device.</p>
+
+    <script>
+      const $ = id => document.getElementById(id);
+      $('go').onclick = async () => {
+        const file = $('video').files[0];
+        if (!file) { $('status').textContent = 'Choose a video first.'; return; }
+        $('status').textContent = 'Uploading and analyzing… (can take a while on a CPU server)';
+        $('result').innerHTML = '';
+        const form = new FormData(); form.append('video', file);
+        try {
+          const res = await fetch('analyze', { method: 'POST', body: form });
+          const r = await res.json();
+          $('status').textContent = '';
+          if (!r.ok && !r.readings) { $('result').textContent = r.message || 'Something went wrong.'; return; }
+          let html = '';
+          if (r.heart_rate_bpm !== null) {
+            html += `<h2>Heart rate: ${r.heart_rate_bpm} BPM</h2>`;
+          } else {
+            html += `<h2>No reliable reading</h2><p>${r.message || ''}</p>`;
+          }
+          html += `<p><b>Trust score:</b> ${(r.trust_score * 100).toFixed(0)}% `
+                + `(${r.readings_reliable} of ${r.readings_total} ten-second readings passed; `
+                + `threshold ${(r.threshold * 100).toFixed(0)}%)</p>`;
+          if (r.tips.length) html += '<p><b>Tips:</b></p><ul>' + r.tips.map(t => `<li>${t}</li>`).join('') + '</ul>';
+          html += '<details><summary>Per-reading details</summary><table><tr><th>start (s)</th><th>heart rate</th>'
+                + '<th>trust</th><th>accepted</th><th>CNN</th><th>POS</th><th>flicker</th></tr>'
+                + r.readings.map(w => `<tr><td>${w.start_s}</td><td>${w.hr_bpm}</td><td>${(w.p_reliable * 100).toFixed(0)}%</td>`
+                  + `<td>${w.reliable ? 'yes' : 'no'}</td><td>${w.hr_cnn}</td><td>${w.hr_pos}</td><td>${w.flicker ? 'yes' : ''}</td></tr>`).join('')
+                + '</table>'
+                + `<p class="muted">Reading from: ${r.details.estimate}. CNN: ${r.details.cnn}. `
+                + `Face detector: ${r.details.face_detector}. Video length analyzed: ${r.duration_s} s.</p></details>`;
+          $('result').innerHTML = html;
+        } catch (e) {
+          $('status').textContent = 'Request failed: ' + e;
+        }
+      };
+    </script>
+  </body>
 </html>

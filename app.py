@@ -6,6 +6,7 @@ Then open:     http://localhost:7860
 import os, tempfile, traceback
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 import pipeline
 
 app = FastAPI(title='Fair Vitals (test)')
@@ -13,6 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 MAX_UPLOAD_MB = 200
 models = pipeline.Models()          # loaded once at startup
 print(f'Models loaded: {models.cnn_name}, trust {models.trust_file}, estimate "{models.estimate}", threshold {models.threshold}')
+app.mount('/source', StaticFiles(directory=os.path.join(HERE, 'static', 'source')), name='source')
 
 @app.get('/')
 def index():
