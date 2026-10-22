@@ -59,7 +59,7 @@
     .header::before {
       content: "";
       position: absolute;
-      inset: 0 0 -56px 0;
+      inset: 0 0 -32px 0;
       z-index: -1;
       background:
         radial-gradient(1.5px 1.5px at 8% 22%, #FFFFFF, transparent),
@@ -76,8 +76,8 @@
         radial-gradient(ellipse 40% 120% at var(--sheen, 30%) 0%, rgba(255, 244, 220, 0.5), transparent 70%),
         radial-gradient(ellipse 30% 90% at 4% 50%, rgba(255, 248, 230, 0.35), transparent 70%),
         linear-gradient(160deg, #DCC69C 0%, var(--gold) 45%, #B4955F 100%);
-      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 72px), transparent);
-      mask-image: linear-gradient(to bottom, #000 calc(100% - 72px), transparent);
+      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), rgba(0, 0, 0, 0.82) calc(100% - 36px), rgba(0, 0, 0, 0.55) calc(100% - 27px), rgba(0, 0, 0, 0.3) calc(100% - 18px), rgba(0, 0, 0, 0.12) calc(100% - 10px), rgba(0, 0, 0, 0.03) calc(100% - 4px), transparent);
+      mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), rgba(0, 0, 0, 0.82) calc(100% - 36px), rgba(0, 0, 0, 0.55) calc(100% - 27px), rgba(0, 0, 0, 0.3) calc(100% - 18px), rgba(0, 0, 0, 0.12) calc(100% - 10px), rgba(0, 0, 0, 0.03) calc(100% - 4px), transparent);
       animation: sheen 14s ease-in-out infinite alternate;
     }
 
@@ -85,11 +85,11 @@
     .header::after {
       content: "";
       position: absolute;
-      inset: 0 0 -56px 0;
+      inset: 0 0 -32px 0;
       z-index: -1;
       background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='300' viewBox='0 0 700 300'%3E%3Cg transform='rotate%28-9 350 150%29' fill='none' stroke='white'%3E%3Cpath d='M20,150 a330,92 0 1,0 660,0 a330,92 0 1,0 -660,0' stroke-opacity='0.42' stroke-width='1.2'/%3E%3Cpath d='M110,150 a240,64 0 1,0 480,0 a240,64 0 1,0 -480,0' stroke-opacity='0.32' stroke-width='1'/%3E%3Cpath d='M200,150 a150,36 0 1,0 300,0 a150,36 0 1,0 -300,0' stroke-opacity='0.38' stroke-width='1' stroke-dasharray='2 6'/%3E%3Ccircle r='4.5' fill='white' fill-opacity='0.85' stroke='none'%3E%3CanimateMotion dur='38s' repeatCount='indefinite' path='M20,150 a330,92 0 1,0 660,0 a330,92 0 1,0 -660,0'/%3E%3C/circle%3E%3Ccircle r='3' fill='white' fill-opacity='0.75' stroke='none'%3E%3CanimateMotion dur='24s' repeatCount='indefinite' begin='-9s' path='M110,150 a240,64 0 1,0 480,0 a240,64 0 1,0 -480,0'/%3E%3C/circle%3E%3Ccircle cx='350' cy='150' r='7' fill='white' fill-opacity='0.35' stroke='none'/%3E%3C/g%3E%3C/svg%3E") right -40px center / 700px 300px no-repeat;
-      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 72px), transparent);
-      mask-image: linear-gradient(to bottom, #000 calc(100% - 72px), transparent);
+      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), rgba(0, 0, 0, 0.82) calc(100% - 36px), rgba(0, 0, 0, 0.55) calc(100% - 27px), rgba(0, 0, 0, 0.3) calc(100% - 18px), rgba(0, 0, 0, 0.12) calc(100% - 10px), rgba(0, 0, 0, 0.03) calc(100% - 4px), transparent);
+      mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), rgba(0, 0, 0, 0.82) calc(100% - 36px), rgba(0, 0, 0, 0.55) calc(100% - 27px), rgba(0, 0, 0, 0.3) calc(100% - 18px), rgba(0, 0, 0, 0.12) calc(100% - 10px), rgba(0, 0, 0, 0.03) calc(100% - 4px), transparent);
       pointer-events: none;
     }
 
@@ -246,7 +246,7 @@
       .line-sector .spark { display: none; }
     }
 
-    .fadeout { height: 40px; }
+    .fadeout { height: 20px; }
 
     /* ---------- main card ---------- */
     .main {
