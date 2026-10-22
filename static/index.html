@@ -240,7 +240,7 @@
     .nav a:hover::after, .nav a:focus-visible::after { transform: scaleX(1); }
 
     @media (prefers-reduced-motion: reduce) {
-      .header-image, .nav a::after { transition: none; }
+      .header-image, .nav a::after, summary::before { transition: none; }
       .header::before, .ripples circle, .line-sector .spark { animation: none; }
       .ripples circle:first-child { opacity: 0.3; transform: scale(0.35); }
       .line-sector .spark { display: none; }
@@ -369,7 +369,31 @@
     }
 
     details { margin-top: 16px; }
-    summary { cursor: pointer; font-weight: 500; }
+
+    summary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+
+    /* Arrow that turns smoothly instead of the browser's triangle flipping. */
+    summary::before {
+      content: "";
+      width: 0;
+      height: 0;
+      border-left: 6px solid currentColor;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      transition: transform 0.3s ease;
+    }
+
+    details[open]:not(.closing) > summary::before { transform: rotate(90deg); }
+    .details-body { overflow: hidden; }
     .table-wrap { overflow-x: auto; }
 
     table {
@@ -486,13 +510,13 @@
               + `<p class="muted">${r.readings_reliable} of ${r.readings_total} ten-second readings passed `
               + `the ${threshold}% threshold (black mark).</p>`;
         if (r.tips.length) html += '<ul class="tips">' + r.tips.map(t => `<li>${t}</li>`).join('') + '</ul>';
-        html += '<details><summary>Per-reading details</summary><div class="table-wrap"><table><tr><th>start (s)</th><th>heart rate</th>'
+        html += '<details><summary>Per-reading details</summary><div class="details-body"><div class="table-wrap"><table><tr><th>start (s)</th><th>heart rate</th>'
               + '<th>trust</th><th>accepted</th><th>CNN</th><th>POS</th><th>flicker</th></tr>'
               + r.readings.map(w => `<tr><td>${w.start_s}</td><td>${w.hr_bpm}</td><td>${(w.p_reliable * 100).toFixed(0)}%</td>`
                 + `<td>${w.reliable ? 'yes' : 'no'}</td><td>${w.hr_cnn}</td><td>${w.hr_pos}</td><td>${w.flicker ? 'yes' : ''}</td></tr>`).join('')
               + '</table></div>'
               + `<p class="muted">Reading from: ${r.details.estimate}. CNN: ${r.details.cnn}. `
-              + `Face detector: ${r.details.face_detector}. Video length analyzed: ${r.duration_s} s.</p></details>`;
+              + `Face detector: ${r.details.face_detector}. Video length analyzed: ${r.duration_s} s.</p></div></details>`;
         $('result').innerHTML = html;
       } catch (e) {
         $('status').textContent = 'Request failed: ' + e.message;
@@ -500,6 +524,27 @@
         $('go').disabled = false;
       }
     };
+
+    // Per-reading details: slide the table open and closed instead of jumping.
+    $('result').addEventListener('click', e => {
+      const summary = e.target.closest('summary');
+      if (!summary || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const details = summary.parentElement, body = details.querySelector('.details-body');
+      e.preventDefault();
+      body.getAnimations().forEach(a => a.cancel());
+      const opening = !details.open || details.classList.contains('closing');
+      details.classList.remove('closing');
+      details.open = true;
+      const h = body.scrollHeight;
+      const anim = body.animate(
+        opening ? [{ height: '0px', opacity: 0 }, { height: `${h}px`, opacity: 1 }]
+                : [{ height: `${h}px`, opacity: 1 }, { height: '0px', opacity: 0 }],
+        { duration: 350, easing: 'ease' });
+      if (!opening) {
+        details.classList.add('closing');
+        anim.onfinish = () => { details.open = false; details.classList.remove('closing'); };
+      }
+    });
   </script>
 
   <script>
