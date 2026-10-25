@@ -37,6 +37,10 @@ class Models:
         self.device = str(m.device)
 
 # ---------------------------------------------------------------- video -> face crops (helper process)
+class VideoError(Exception):
+    """A problem with the uploaded file itself; the message is meant for the person who uploaded it."""
+
+
 def face_clip(video_path, workdir):
     out = os.path.join(workdir, 'clip')
     errors = []
@@ -48,13 +52,14 @@ def face_clip(video_path, workdir):
         try:
             r = subprocess.run([sys.executable, WORKER, json.dumps(job)], capture_output=True, text=True, timeout=WORKER_TIMEOUT)
         except subprocess.TimeoutExpired:
-            raise RuntimeError(f'Reading the video took longer than {WORKER_TIMEOUT} s. Try a shorter or smaller video.')
+            raise VideoError(f'Reading the video took longer than {WORKER_TIMEOUT} seconds. Please try a shorter or smaller video.')
         print(f'  video decoded and face cropped ({det}) in {time.time() - t0:.1f} s', flush=True)
         if r.returncode == 0:
             frames = np.load(out + '_frames.npy'); stats = pd.read_csv(out + '_stats.csv')
             return frames, stats, det
         errors.append(f'{det}: {(r.stderr or r.stdout).strip().splitlines()[-1:] or ["?"]}')
-    raise RuntimeError('Could not read the video. ' + ' | '.join(errors))
+    print('  could not read the video: ' + ' | '.join(errors), flush=True)                # the details, for the logs
+    raise VideoError("We couldn't open that file as a video. Please upload a video, for example an .mp4 or .mov from your phone.")
 
 # ---------------------------------------------------------------- tips (simple rules; tune later)
 def tips_for(rejected, dark):

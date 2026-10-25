@@ -83,8 +83,10 @@ async def analyze(video: UploadFile = File(...)):
         print(f'Analysing {size / 2**20:.1f} MB video', flush=True)
         # in a worker thread, so the server keeps answering other requests during a long analysis
         return await run_in_threadpool(pipeline.analyze, path, models)
+    except pipeline.VideoError as e:
+        return JSONResponse({'ok': False, 'message': str(e)}, 400)
     except Exception as e:
         traceback.print_exc()
-        return JSONResponse({'ok': False, 'message': f'Analysis failed: {e}'}, 500)
+        return JSONResponse({'ok': False, 'message': 'Something went wrong while analysing the video. Please try again.'}, 500)
     finally:
         os.remove(path)            # the video is deleted right after analysis

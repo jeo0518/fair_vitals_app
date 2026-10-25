@@ -51,6 +51,19 @@ creates its tables on first use. To use another database, set `DATABASE_URL` bef
 `export DATABASE_URL=postgresql://user:password@host:5432/dbname`. On a host that serves the site over
 HTTPS, also set `FV_SECURE_COOKIE=1`.
 
+## Test videos
+`tests/` has a set of synthetic test videos with a known heart rate and known problems (too short, no face,
+too dark, backlit, flickering light at 125 BPM, a shaky camera, a phone video stored sideways, an iPhone-style
+HEVC .mov, a large 4K 60 fps file, and a text file pretending to be a video), plus a script that sends each
+one to a running Fair Vitals and checks the result:
+
+    python tests/make_videos.py                                   # once, takes about 15 minutes
+    python tests/check_videos.py                                  # checks http://localhost:7860
+    python tests/check_videos.py --url https://YOUR-SPACE.hf.space
+
+They check that the app behaves sensibly, not how accurate it is: a still photo with a clean, made-up pulse
+is far easier than real skin. The face is NASA's public-domain portrait of astronaut Eileen Collins.
+
 ## Deploy on Hugging Face Spaces (free, permanent link)
 1. Create a new Space, choose **Docker** as the SDK.
 2. Upload all files in this folder, including `models/` with the two model files.
