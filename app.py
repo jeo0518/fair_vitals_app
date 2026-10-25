@@ -53,6 +53,15 @@ app.mount('/static', StaticFiles(directory=os.path.join(HERE, 'static')), name='
 app.include_router(auth.router)
 app.include_router(readings.router)
 
+@app.middleware('http')
+async def always_check_for_updates(request, call_next):
+    # Pages, scripts and styles: the browser may keep a copy but must ask whether it changed before using it
+    # (an unchanged file costs a tiny "304 not modified"), so an update shows up without clearing the cache.
+    response = await call_next(request)
+    if request.method == 'GET' and 'cache-control' not in response.headers:
+        response.headers['Cache-Control'] = 'no-cache'
+    return response
+
 @app.get('/')
 def index():
     return FileResponse(os.path.join(HERE, 'static', 'index.html'))
