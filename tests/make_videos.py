@@ -121,7 +121,7 @@ CASES = [
     ('dark', 'Whole scene badly underexposed.',
      {'no_reading': True, 'tip': 'dark'}, lambda: write('dark', frames(25, 72, gain=0.18))),
     ('backlit', 'Dim face in front of a bright background, like the hardest real test case.',
-     {'tip': 'dark'}, lambda: write('backlit', frames(25, 72, face_gain=0.3, bg_gain=1.5, amp=0.006))),
+     {'tip': 'behind'}, lambda: write('backlit', frames(25, 72, face_gain=0.3, bg_gain=1.5, amp=0.006))),
     ('flicker_125', 'Lights flickering at 125 BPM over a weak 72 BPM pulse.',
      {'no_reading_at': 125, 'flicker': True}, lambda: write('flicker_125', frames(25, 72, amp=0.003, flicker=(125, 0.03)))),
     ('shaky', 'Hand-held: the camera wanders and shakes.',

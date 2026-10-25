@@ -33,12 +33,19 @@ def detect(rgb):
         x, y, fw, fh = max(faces, key=lambda f: f[2] * f[3])
     return ((x + fw / 2) / s, (y + fh / 2) / s, max(fw, fh) / s)
 
-def stats_row(k, det, w, h, crop):
+def stats_row(k, det, w, h, crop, rgb=None, box=None):
     g = crop.mean(-1)
     clip = float(((crop > 250).any(-1) | (crop < 5).all(-1)).mean())
+    bg, glare = '', ''
+    if rgb is not None:                 # the rest of the frame, outside the face crop (for the "light behind you" tip)
+        x1, y1, s = box
+        small = rgb[::8, ::8].mean(-1); out = np.ones(small.shape, bool)
+        out[y1 // 8:(y1 + s) // 8, x1 // 8:(x1 + s) // 8] = False
+        if out.any():
+            bg, glare = float(small[out].mean()), float((small[out] > 220).mean())
     return [k % DET_EVERY == 0, det is not None,
             det[0] / w if det else '', det[1] / h if det else '', det[2] / min(h, w) if det else '',
-            float(g.mean()), clip]
+            float(g.mean()), clip, bg, glare]
 
 rows, out = [], []
 if job['mode'] == 'video':
@@ -81,7 +88,7 @@ if job['mode'] == 'video':
         s = int(min(side * 1.5, h, w))
         x1 = int(np.clip(cx - s / 2, 0, w - s)); y1 = int(np.clip(cy - s / 2, 0, h - s))
         crop = cv2.resize(np.ascontiguousarray(rgb[y1:y1 + s, x1:x1 + s]), (SIZE, SIZE), interpolation=cv2.INTER_AREA)
-        rows.append(stats_row(k, det, w, h, crop)); out.append(crop); k += 1
+        rows.append(stats_row(k, det, w, h, crop, rgb, (x1, y1, s))); out.append(crop); k += 1
     proc.stdout.close(); proc.wait()
     if not out:
         err.seek(0); sys.exit('ffmpeg decoded no frames: ' + err.read().decode()[:300])
@@ -97,6 +104,6 @@ else:                                   # already-cropped clip (UCLA): only comp
 
 with open(job['out'] + '_stats.csv', 'w', newline='') as fh:
     wr = csv.writer(fh)
-    wr.writerow(['det_try', 'det_ok', 'det_cx', 'det_cy', 'det_side', 'lum', 'clip_frac'])
+    wr.writerow(['det_try', 'det_ok', 'det_cx', 'det_cy', 'det_side', 'lum', 'clip_frac', 'bg_lum', 'bg_glare'])
     wr.writerows(rows)
 print(json.dumps({'fps_src': fps_src, 'duration': duration, 'n': len(rows)}))

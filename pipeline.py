@@ -22,7 +22,7 @@ YUNET = os.path.join(MODEL_DIR, 'face_detection_yunet_2023mar.onnx')
 FPS = fv.FPS
 MAX_SEC = 60          # analyze at most the first 60 s of a video
 WORKER_TIMEOUT = 240  # seconds allowed for decoding the video and cropping the face, per attempt
-DARK_LUM = 45         # face-center brightness (0-255) below which we ask for more light (app rule, not the model)
+DARK_LUM = 45         # brightness (0-255) below which face and background count as dark (app rule, not the model)
 
 # ---------------------------------------------------------------- models
 class Models:
@@ -62,18 +62,57 @@ def face_clip(video_path, workdir):
     raise VideoError("We couldn't open that file as a video. Please upload a video, for example an .mp4 or .mov from your phone.")
 
 # ---------------------------------------------------------------- tips (simple rules; tune later)
-def tips_for(rejected, dark):
-    tips = []
-    if dark:
-        tips.append('Your face looks quite dark. Try facing a window or moving somewhere brighter.')
-    if len(rejected):
-        med = rejected.median(numeric_only=True)
-        if med.get('face_found', 1) < 0.8: tips.append('Keep your whole face in the frame.')
-        if med.get('motion_xy', 0) > 0.03 or med.get('frame_change', 0) > 0.03: tips.append('Try to keep still and hold the phone steady.')
-        if rejected.flicker_flag.mean() > 0.3: tips.append('The light seems to flicker. Daylight or a different lamp should help.')
-        if med.get('light_change', 0) > 0.03: tips.append('The light kept changing. Screens and moving shadows can do that.')
-        if not tips: tips.append('The signal was weak. More light, holding the phone a bit closer and keeping still all help.')
-    return tips
+# Each window the trust model turned down is checked for the usual causes. The tips are ranked by how many of
+# those windows each cause explains, and say when in the video it happened if it was only part of it.
+# Light is never judged on the face alone: a face check would call darker skin "too dark" in a well-lit
+# room. "Dark" means the face AND the background are dim; "light behind you" means a good part of the frame
+# around you is near white and much brighter than your face, which leaves a face in shadow whatever its tone.
+CAUSES = [   # name, test on one window, tip
+    ('face', lambda w: w.face_found < 0.8,
+     'We couldn't always find your face. Keep your whole face in the frame, about an arm\'s length away.'),
+    ('dark', lambda w: max(w.face_brightness, w.bg_brightness, w.bg_lum) < DARK_LUM,
+     'The video is quite dark. Turn on a light or face a window. Daylight from the front works best.'),
+    ('behind', lambda w: w.bg_glare > 0.3 and w.bg_lum > 1.3 * w.face_brightness,
+     'There\'s a bright light behind you (a window or lamp), which leaves your face in shadow. Turn around so the light is in front of you.'),
+    ('glare', lambda w: w.clip_frac > 0.2,
+     'Part of the picture is washed out. Move out of direct sunlight or away from a bare bulb.'),
+    ('still', lambda w: w.motion_xy > 0.03 or w.frame_change > 0.03,
+     'You or the phone moved. Hold still: rest your elbows on a table or lean the phone against something, and try not to talk.'),
+    ('flicker', lambda w: w.flicker_flag > 0,
+     'The light seems to flicker. Daylight or a different lamp should help; some LED bulbs and screens flicker.'),
+    ('light_change', lambda w: w.light_change > 0.03,
+     'The light kept changing. Moving shadows, a TV or a screen lighting your face can do that.'),
+]
+WEAK = 'The pulse signal was weak. More light on your face, holding the phone a bit closer and keeping still all help.'
+
+
+def when(windows, total):
+    """'around 10-25 s' when the problem is limited to one stretch of the video, else ''."""
+    if len(windows) == total or len(windows) > 0.6 * total:
+        return ''
+    starts = sorted(windows.start_s)
+    if starts[-1] - starts[0] > 5 * (len(starts) - 1) + 1e-6:     # not one stretch
+        return ''
+    return f' This was mostly around {starts[0]:.0f}\u2013{starts[-1] + 10:.0f} s.'
+
+
+def tips_for(df, max_tips=3):
+    rejected = df[~df.reliable]
+    if not len(rejected):
+        return []
+    found = []
+    for name, test, tip in CAUSES:
+        hit = rejected[[bool(test(w)) for w in rejected.itertuples()]]
+        if len(hit):
+            found.append((len(hit), name, tip + when(hit, len(df))))
+    names = {n for _, n, _ in found}
+    if 'dark' in names:                                         # in a dark video the noise looks like changing light
+        found = [f for f in found if f[1] != 'light_change']
+    if 'behind' in names:                                       # the washed-out part is the light behind you
+        found = [f for f in found if f[1] != 'glare']
+    found.sort(key=lambda f: -f[0])
+    tips = [t for _, _, t in found[:max_tips]]
+    return tips or [WEAK]
 
 # ---------------------------------------------------------------- main entry
 def analyze(video_path, models):
@@ -91,12 +130,16 @@ def analyze(video_path, models):
         fr = np.asarray(frames[s:s + W])
         r = fv.window_features(models.core, fr, stats.iloc[s:s + W])
         r['p_reliable'] = fv.trust_score(models.core, r)
-        r['face_brightness'] = float(fv.ring_and_center(fr)[1].mean())   # app rule only, never a model input
+        ring, center = fv.ring_and_center(fr)                       # for the tips only, never a model input
+        r['face_brightness'], r['bg_brightness'] = float(center.mean()), float(ring.mean())
+        st = stats.iloc[s:s + W]
+        r['clip_frac'] = float(st.clip_frac.mean())
+        r['bg_lum'] = float(st.bg_lum.mean()) if st.bg_lum.notna().any() else r['bg_brightness']
+        r['bg_glare'] = float(st.bg_glare.mean()) if st.bg_glare.notna().any() else 0.0
         r['start_s'] = s / FPS; rows.append(r)
     print(f'  {len(rows)} ten-second windows scored in {time.time() - t0:.1f} s', flush=True)
     df = pd.DataFrame(rows)
     df['reliable'] = df.p_reliable >= models.threshold
-    dark = bool(df.face_brightness.median() < DARK_LUM)
 
     # The video's trust score is the mean of its windows' scores (the expected share of windows within 5 BPM),
     # and it alone decides whether a heart rate is shown, so the badge and the score can't disagree.
@@ -113,7 +156,7 @@ def analyze(video_path, models):
         'threshold': float(models.threshold),
         'heart_rate_bpm': round(float(acc.hr_app.median()), 1) if trusted else None,
         'verdict': 'reliable' if trusted else 'unreliable',
-        'tips': tips_for(df[~df.reliable], dark),
+        'tips': tips_for(df),
         'details': {'estimate': models.estimate, 'cnn': models.cnn_name, 'face_detector': detector,
                     'device': models.device},
         'readings': [{'start_s': round(r.start_s, 1), 'hr_bpm': round(r.hr_app, 1),
