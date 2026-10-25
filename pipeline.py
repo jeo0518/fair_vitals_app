@@ -69,7 +69,7 @@ def face_clip(video_path, workdir):
 # around you is near white and much brighter than your face, which leaves a face in shadow whatever its tone.
 CAUSES = [   # name, test on one window, tip
     ('face', lambda w: w.face_found < 0.8,
-     'We couldn't always find your face. Keep your whole face in the frame, about an arm\'s length away.'),
+     "We couldn't always find your face. Keep your whole face in the frame, about an arm's length away."),
     ('dark', lambda w: max(w.face_brightness, w.bg_brightness, w.bg_lum) < DARK_LUM,
      'The video is quite dark. Turn on a light or face a window. Daylight from the front works best.'),
     ('behind', lambda w: w.bg_glare > 0.3 and w.bg_lum > 1.3 * w.face_brightness,
