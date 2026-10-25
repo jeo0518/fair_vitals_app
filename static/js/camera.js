@@ -119,7 +119,7 @@
 
   function start() {
     const type = TYPES.find(t => MediaRecorder.isTypeSupported(t)) || '';
-    // a high bitrate keeps the tiny colour changes of the pulse that heavy compression would smooth away
+    // a high bitrate keeps the tiny color changes of the pulse that heavy compression would smooth away
     recorder = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 6e6 });
     chunks = [];
     recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };

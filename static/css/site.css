@@ -198,7 +198,7 @@ h1 {
 .line-sector::before { left: -10px; }
 .line-sector::after { right: -10px; }
 
-/* A small light travelling along the line, like a signal. */
+/* A small light traveling along the line, like a signal. */
 .line-sector .spark {
   position: absolute;
   top: -3px;
@@ -1087,7 +1087,7 @@ html.intro-on body > :not(#intro) { visibility: hidden; animation: intro-failsaf
 
 
 /* ---------- inner boxes: one thin border all round, and a glare on hover ---------- */
-/* Same background colours as before; the border takes each box's old accent colour. */
+/* Same background colors as before; the border takes each box's old accent color. */
 .point, .stat, .note, .tips, .pipe-step, .pipe-window {
   --edge: rgba(201, 174, 123, 0.7);
   position: relative;

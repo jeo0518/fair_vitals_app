@@ -20,9 +20,9 @@ WORKER = os.path.join(HERE, 'worker.py')
 YUNET = os.path.join(MODEL_DIR, 'face_detection_yunet_2023mar.onnx')
 
 FPS = fv.FPS
-MAX_SEC = 60          # analyse at most the first 60 s of a video
+MAX_SEC = 60          # analyze at most the first 60 s of a video
 WORKER_TIMEOUT = 240  # seconds allowed for decoding the video and cropping the face, per attempt
-DARK_LUM = 45         # face-centre brightness (0-255) below which we ask for more light (app rule, not the model)
+DARK_LUM = 45         # face-center brightness (0-255) below which we ask for more light (app rule, not the model)
 
 # ---------------------------------------------------------------- models
 class Models:

@@ -3,7 +3,7 @@
 const $ = id => document.getElementById(id);
 const stillMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let lastResult = null;
-let chosen = null;                       // the video to analyse: a picked file, or a recording from camera.js
+let chosen = null;                       // the video to analyze: a picked file, or a recording from camera.js
 function useVideo(file, label) {
   chosen = file;
   $('file-name').textContent = file ? label || file.name : 'No video chosen';
@@ -21,7 +21,7 @@ $('go').onclick = async () => {
   const started = Date.now(), mb = (file.size / 2 ** 20).toFixed(0);
   const tick = () => {
     const s = Math.round((Date.now() - started) / 1000);
-    $('status').textContent = `Uploading (${mb} MB) and analysing… ${s} s. This usually takes 1 to 3 minutes.`;
+    $('status').textContent = `Uploading (${mb} MB) and analyzing… ${s} s. This usually takes 1 to 3 minutes.`;
   };
   tick();
   const timer = setInterval(tick, 1000), stop = new AbortController();

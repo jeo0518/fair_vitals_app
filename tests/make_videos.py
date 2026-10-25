@@ -3,7 +3,7 @@
     python tests/make_videos.py            # writes tests/videos/*.mp4 (and .mov) plus tests/videos/expected.json
 
 The face is tests/face.jpg: NASA's public-domain portrait of astronaut Eileen Collins (the "astronaut" test
-image that ships with scikit-image). Each frame, the skin's colour is changed very slightly at an exact
+image that ships with scikit-image). Each frame, the skin's color is changed very slightly at an exact
 heart rate, mostly in green, the way a real pulse shows up on camera; then camera noise, compression and
 the case's problem (darkness, flicker, movement, ...) are added.
 
@@ -20,17 +20,17 @@ import cv2
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, 'videos')
 W, H, FPS = 1280, 720, 30
-PULSE_RGB = np.array([0.33, 0.77, 0.53])     # how a pulse changes skin colour (mostly green), roughly as in rPPG papers
+PULSE_RGB = np.array([0.33, 0.77, 0.53])     # how a pulse changes skin color (mostly green), roughly as in rPPG papers
 rng = np.random.default_rng(0)
 
 
 # ---------------------------------------------------------------- the scene
 def base_frame():
-    """The portrait centred on a plain backdrop, and a soft mask of the facial skin (where the pulse shows)."""
+    """The portrait centered on a plain backdrop, and a soft mask of the facial skin (where the pulse shows)."""
     photo = cv2.imread(os.path.join(HERE, 'face.jpg')).astype(np.float32)        # BGR, 512 x 512
     s = H / 512
     photo = cv2.resize(photo, (int(512 * s), H), interpolation=cv2.INTER_CUBIC)
-    frame = np.empty((H, W, 3), np.float32); frame[:] = (150, 156, 160)          # grey-blue backdrop
+    frame = np.empty((H, W, 3), np.float32); frame[:] = (150, 156, 160)          # gray-blue backdrop
     x0 = (W - photo.shape[1]) // 2
     frame[:, x0:x0 + photo.shape[1]] = photo
     # the face box YuNet finds on the 512 px photo: x 178, y 63, w 90, h 113

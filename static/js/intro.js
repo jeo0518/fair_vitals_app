@@ -111,7 +111,7 @@
   seed = 3;
   const newStar = z => ({ x: (rand() - 0.5) * 2.4, y: (rand() - 0.5) * 2.4, z, ci: rand() * TINTS.length | 0 });
   const stars = Array.from({ length: 1500 }, () => newStar(rand()));
-  const BANDS = 5, starPaths = Array.from({ length: TINTS.length * BANDS }, () => []);   // line ends per colour and depth band
+  const BANDS = 5, starPaths = Array.from({ length: TINTS.length * BANDS }, () => []);   // line ends per color and depth band
   const newDust = z => ({ x: (rand() - 0.5) * 1.6, y: (rand() - 0.5) * 1.6, z, s: 0.5 + rand() });
   const dust = Array.from({ length: 70 }, () => newDust(rand()));
 
@@ -126,7 +126,7 @@
     return Math.max(g(p, 0.05), 0.6 * g(p - 0.2, 0.05), g(p - 1, 0.05));
   }
 
-  // In heart units: about 400 tall, centred near (0, 0). Front view: the apex points down and to the right.
+  // In heart units: about 400 tall, centered near (0, 0). Front view: the apex points down and to the right.
   function ventricles() {
     ctx.beginPath();
     ctx.moveTo(-70, -12);
@@ -186,7 +186,7 @@
 
     for (const [p, w, behind] of VESSELS) if (behind) vessel(p, w, alpha * 0.55);
 
-    // the ventricles swell on each beat (from their centre), the vessels much less
+    // the ventricles swell on each beat (from their center), the vessels much less
     ctx.save();
     ctx.translate(10, 40); ctx.scale(1 + 0.07 * b, 1 + 0.06 * b); ctx.translate(-10, -40);
     const body = ctx.createRadialGradient(-20, -10, 10, 10, 30, 150);
@@ -274,7 +274,7 @@
       ctx.globalAlpha = 1;
     }
 
-    // stars: points while drifting, long streaks at warp. Drawn in batches (one path per colour and
+    // stars: points while drifting, long streaks at warp. Drawn in batches (one path per color and
     // depth band) instead of one line at a time, which keeps warp smooth on slower computers.
     const dz = (v * 1.5 + 0.01) * dt, cr = Math.cos(roll), sr = Math.sin(roll);
     for (const path of starPaths) path.length = 0;

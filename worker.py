@@ -1,4 +1,4 @@
-# Video helper: decodes a video with ffmpeg, finds the face (YuNet, Haar, or centre crop),
+# Video helper: decodes a video with ffmpeg, finds the face (YuNet, Haar, or center crop),
 # and writes 64x64 face crops + per-frame stats. Runs as a separate process so a crash in
 # native video/face code can never take down the web server. Identical to the trust-score notebook.
 import sys, os, json, csv, subprocess, tempfile
