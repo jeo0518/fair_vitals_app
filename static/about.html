@@ -69,7 +69,8 @@
       <h2>How it works</h2>
       <p>
         We cut your video into 10-second pieces that overlap, starting a new one every 5 seconds. Each piece gets
-        its own heart rate and its own trust score. The number you see comes only from the pieces we trust.
+        its own heart rate and its own trust score. We average the trust scores, and only show a heart rate if that
+        average is high enough. The number comes from the pieces that passed.
       </p>
 
       <div class="pipeline" role="img" aria-label="Pipeline: selfie video, face crop, then for every 10-second window the POS refiner gives the heart rate while the Stage 2 CNN, POS with flicker check, and motion, lighting and background measures feed 18 features to the trust model; a number is shown only when the trust model says ok.">
@@ -221,8 +222,9 @@
             won't upload.</li>
         <li>Your face needs to be in view, still and evenly lit. Moving around, dim or changing light, a bright window
             behind you, or a flickering lamp or screen will make it ask you to try again more often.</li>
-        <li>The heart rate you see is the middle value of the pieces we trusted. The trust score is the middle value of
-            all the pieces, so you can get a heart rate with a fairly low trust score when only some pieces passed.</li>
+        <li>The trust score is the average over all the 10-second pieces, and you only get a heart rate when it's at least
+            85%. That threshold was picked for single pieces, so on an average it's a bit stricter than in our tests.
+            The heart rate is the middle value of the pieces that passed, so one odd piece can't drag it off.</li>
         <li>It runs on an ordinary server without a graphics card, so a video can take a minute or more, and it handles
             one video at a time.</li>
         <li>We look at how bright your face is only to suggest better light. It never changes the reading or whether

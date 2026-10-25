@@ -45,8 +45,8 @@ $('go').onclick = async () => {
     html += `<p><b>Trust score:</b> ${trust}%</p>`
           + `<div class="meter"><div class="meter-fill" style="width:${trust}%"></div>`
           + `<div class="meter-mark" style="left:${threshold}%" title="threshold ${threshold}%"></div></div>`
-          + `<p class="muted">${r.readings_reliable} of ${r.readings_total} ten-second pieces scored above `
-          + `${threshold}% (the black line).</p>`;
+          + `<p class="muted">The average over ${r.readings_total} ten-second pieces. We show a heart rate when it's at least `
+          + `${threshold}% (the black line). ${r.readings_reliable} of ${r.readings_total} pieces got there on their own.</p>`;
     if (r.tips.length) html += '<ul class="tips">' + r.tips.map(t => `<li>${t}</li>`).join('') + '</ul>';
     html += '<details><summary>Details for each 10 seconds</summary><div class="details-body"><div class="table-wrap"><table><tr><th>from (s)</th><th>heart rate</th>'
           + '<th>trust</th><th>used</th><th>CNN</th><th>POS</th><th>flicker</th></tr>'

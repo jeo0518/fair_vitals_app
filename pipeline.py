@@ -93,16 +93,21 @@ def analyze(video_path, models):
     df['reliable'] = df.p_reliable >= models.threshold
     dark = bool(df.face_brightness.median() < DARK_LUM)
 
+    # The video's trust score is the mean of its windows' scores (the expected share of windows within 5 BPM),
+    # and it alone decides whether a heart rate is shown, so the badge and the score can't disagree.
+    # The heart rate is the median of the passing windows, so one odd window (e.g. flicker) can't pull it.
+    trust = float(df.p_reliable.mean())
+    trusted = trust >= models.threshold
     acc = df[df.reliable]
     result = {
         'ok': True,
         'duration_s': round(len(frames) / FPS, 1),
         'readings_total': int(len(df)),
         'readings_reliable': int(len(acc)),
-        'trust_score': round(float(df.p_reliable.median()), 3),        # 0-1, median over all 10 s readings
+        'trust_score': round(trust, 3),                                 # 0-1, mean over all 10 s readings
         'threshold': float(models.threshold),
-        'heart_rate_bpm': round(float(acc.hr_app.median()), 1) if len(acc) else None,
-        'verdict': 'reliable' if len(acc) else 'unreliable',
+        'heart_rate_bpm': round(float(acc.hr_app.median()), 1) if trusted else None,
+        'verdict': 'reliable' if trusted else 'unreliable',
         'tips': tips_for(df[~df.reliable], dark),
         'details': {'estimate': models.estimate, 'cnn': models.cnn_name, 'face_detector': detector,
                     'device': models.device},
@@ -111,6 +116,6 @@ def analyze(video_path, models):
                       'hr_cnn': round(r.hr_cnn_raw, 1), 'hr_pos': round(r.hr_pos_raw, 1),
                       'flicker': bool(r.flicker_flag)} for r in df.itertuples()],
     }
-    if not len(acc):
+    if not trusted:
         result['message'] = "We couldn't get a reading we trust from this video."
     return result
