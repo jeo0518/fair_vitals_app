@@ -22,6 +22,7 @@ YUNET = os.path.join(MODEL_DIR, 'face_detection_yunet_2023mar.onnx')
 FPS = fv.FPS
 MAX_SEC = 60          # analyze at most the first 60 s of a video
 WORKER_TIMEOUT = 240  # seconds allowed for decoding the video and cropping the face, per attempt
+MIN_FACE = 0.5       # a window where a face was found in less than half the checks can't be trusted (as in fair_vitals_core.analyze)
 DARK_LUM = 45         # brightness (0-255) below which face and background count as dark (app rule, not the model)
 
 # ---------------------------------------------------------------- models
@@ -139,6 +140,10 @@ def analyze(video_path, models):
         r['start_s'] = s / FPS; rows.append(r)
     print(f'  {len(rows)} ten-second windows scored in {time.time() - t0:.1f} s', flush=True)
     df = pd.DataFrame(rows)
+    # No face for most of a window means there's no pulse to read, whatever the trust model says, so that window
+    # counts as 0 (only when a face detector actually ran; without one, face_found is always 0).
+    df['no_face'] = (df.face_found < MIN_FACE) & (detector != 'none')
+    df.loc[df.no_face, 'p_reliable'] = 0.0
     df['reliable'] = df.p_reliable >= models.threshold
 
     # The video's trust score is the mean of its windows' scores (the expected share of windows within 5 BPM),
@@ -162,7 +167,7 @@ def analyze(video_path, models):
         'readings': [{'start_s': round(r.start_s, 1), 'hr_bpm': round(r.hr_app, 1),
                       'p_reliable': round(r.p_reliable, 3), 'reliable': bool(r.reliable),
                       'hr_cnn': round(r.hr_cnn_raw, 1), 'hr_pos': round(r.hr_pos_raw, 1),
-                      'flicker': bool(r.flicker_flag)} for r in df.itertuples()],
+                      'flicker': bool(r.flicker_flag), 'no_face': bool(r.no_face)} for r in df.itertuples()],
     }
     if not trusted:
         result['message'] = "We couldn't get a reading we trust from this video."

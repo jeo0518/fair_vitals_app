@@ -224,7 +224,8 @@
             behind you, or a flickering lamp or screen will make it ask you to try again more often.</li>
         <li>The trust score is the average over all the 10-second pieces, and you only get a heart rate when it's at least
             85%. That threshold was picked for single pieces, so on an average it's a bit stricter than in our tests.
-            The heart rate is the middle value of the pieces that passed, so one odd piece can't drag it off.</li>
+            The heart rate is the middle value of the pieces that passed, so one odd piece can't drag it off.
+            A piece where we couldn't find a face most of the time counts as 0, whatever the trust model says.</li>
         <li>It runs on an ordinary server without a graphics card, so a video can take a minute or more, and it handles
             one video at a time.</li>
         <li>We look at how bright your face is only to suggest better light. It never changes the reading or whether
