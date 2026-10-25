@@ -1132,3 +1132,75 @@ html.intro-on body > :not(#intro) { visibility: hidden; animation: intro-failsaf
 .note.warn:hover, .note.urgent:hover { border-color: var(--bad); box-shadow: 0 0 14px rgba(154, 74, 58, 0.3); }
 
 
+
+/* ---------- Home: recording with the camera (camera.js) ---------- */
+.cam { margin-top: 20px; }
+
+.cam-view {
+  position: relative;
+  overflow: hidden;
+  max-width: 560px;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  background: #0B1513;
+}
+
+.cam-view video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);                    /* a mirror, like the phone's own selfie camera */
+}
+
+/* the oval to line your face up with: everything outside it is gently dimmed */
+.cam-oval {
+  position: absolute;
+  left: 30%;
+  top: 11%;
+  width: 40%;
+  height: 72%;
+  border: 2px dashed rgba(246, 233, 204, 0.85);
+  border-radius: 50%;
+  box-shadow: 0 0 0 999px rgba(2, 6, 5, 0.35);
+  pointer-events: none;
+}
+
+.cam.recording .cam-oval { border-style: solid; border-color: var(--bad); }
+
+.cam-count {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+  color: #FFFFFF;
+  background: rgba(154, 74, 58, 0.85);
+}
+
+.cam-count:empty { display: none; }
+
+.cam-checks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9em;
+  font-weight: 400;
+}
+
+.cam-checks li::before { display: inline-block; width: 1.3em; font-weight: 600; }
+.cam-checks li.ok { color: var(--ok); }
+.cam-checks li.ok::before { content: "✓"; }
+.cam-checks li.bad { color: var(--bad); }
+.cam-checks li.bad::before { content: "!"; }
+.cam-checks li.info { color: var(--muted); }
+.cam-checks li.info::before { content: "•"; }
+.cam-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+@media (max-width: 720px) {
+  .cam-checks { grid-template-columns: 1fr; }
+}

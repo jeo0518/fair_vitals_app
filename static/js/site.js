@@ -55,6 +55,7 @@
 
     addEventListener('pointermove', e => {
       if (e.pointerType !== 'mouse') return;
+      if (card.classList.contains('hold-still')) { aim(0, 0, 1); return; }   // e.g. while the camera is filming
       if (!box) measure();
       if (!box) return;
       const x = e.clientX - box.left, y = e.clientY - box.top;

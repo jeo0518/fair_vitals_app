@@ -90,10 +90,29 @@
             <li>Find even light. Facing a window during the day works well.</li>
           </ul>
           <div class="controls">
+            <button id="cam-open" class="btn" type="button" hidden>Record here</button>
             <label for="video" class="btn">Choose video</label>
             <input type="file" id="video" accept="video/*">
             <button id="go" class="btn btn-primary">Analyze</button>
             <span id="file-name" class="file-name">No video chosen</span>
+          </div>
+          <!-- live camera (camera.js): checks the light, the background and stillness before and while you record -->
+          <div id="cam" class="cam" hidden>
+            <div class="cam-view">
+              <video id="cam-video" playsinline muted autoplay></video>
+              <div class="cam-oval" aria-hidden="true"></div>
+              <div id="cam-count" class="cam-count" aria-live="polite"></div>
+            </div>
+            <ul class="cam-checks" aria-live="polite">
+              <li id="chk-light"></li>
+              <li id="chk-back"></li>
+              <li id="chk-still"></li>
+              <li id="chk-face"></li>
+            </ul>
+            <div class="cam-actions">
+              <button id="cam-rec" class="btn btn-primary" type="button">Start recording</button>
+              <button id="cam-close" class="btn" type="button">Cancel</button>
+            </div>
           </div>
           <p id="status" role="status"></p>
           <div id="result"></div>
@@ -111,5 +130,6 @@
   <script src="/static/js/intro.js"></script>
   <script src="/static/js/site.js"></script>
   <script src="/static/js/measure.js"></script>
+  <script src="/static/js/camera.js"></script>
 </body>
 </html>

@@ -3,17 +3,20 @@
 const $ = id => document.getElementById(id);
 const stillMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let lastResult = null;
-$('video').onchange = () => {
-  const file = $('video').files[0];
-  $('file-name').textContent = file ? file.name : 'No video chosen';
-};
+let chosen = null;                       // the video to analyse: a picked file, or a recording from camera.js
+function useVideo(file, label) {
+  chosen = file;
+  $('file-name').textContent = file ? label || file.name : 'No video chosen';
+}
+$('video').onchange = () => useVideo($('video').files[0]);
+window.useRecording = useVideo;          // camera.js hands its recording over here
 $('go').onclick = async () => {
-  const file = $('video').files[0];
+  const file = chosen;
   if (!file) { $('status').textContent = 'Pick a video first.'; return; }
   $('result').innerHTML = '';
   lastResult = null;
   $('go').disabled = true;
-  const form = new FormData(); form.append('video', file);
+  const form = new FormData(); form.append('video', file, file.name || 'recording.webm');
   // count the seconds so a long wait doesn't look frozen; give up after 10 minutes
   const started = Date.now(), mb = (file.size / 2 ** 20).toFixed(0);
   const tick = () => {
