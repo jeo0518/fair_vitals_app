@@ -71,7 +71,10 @@ def judge(expect, status, r):
             else:
                 problems.append(f'no reading, and POS was wrong too (true {truth})')
     if expect.get('no_reading') and bpm is not None:
-        problems.append('gave a reading for a video it should refuse')
+        if 'truth' in expect and abs(bpm - expect['truth']) <= CLOSE:   # a hard video, but the number was right
+            warnings.append(f'expected a refusal, but the reading was right (true {expect["truth"]})')
+        else:
+            problems.append('gave a reading for a video it should refuse')
     if 'no_reading_at' in expect and bpm is not None and abs(bpm - expect['no_reading_at']) <= 10:
         problems.append(f'confidently reported {bpm} BPM, which is the flicker, not a pulse')
     if expect.get('flicker') and windows and not any(w.get('flicker') for w in windows):

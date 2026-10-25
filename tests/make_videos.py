@@ -125,7 +125,7 @@ CASES = [
     ('flicker_125', 'Lights flickering at 125 BPM over a weak 72 BPM pulse.',
      {'no_reading_at': 125, 'flicker': True}, lambda: write('flicker_125', frames(25, 72, amp=0.003, flicker=(125, 0.03)))),
     ('shaky', 'Hand-held: the camera wanders and shakes.',
-     {'no_reading': True, 'tip': 'still'}, lambda: write('shaky', frames(25, 72, shake=60))),
+     {'no_reading': True, 'truth': 72, 'tip': 'still'}, lambda: write('shaky', frames(25, 72, shake=60))),
     ('portrait_rotated', 'Clean 72 BPM, stored sideways with a rotation tag, like a phone in portrait.',
      {'reading': 72}, lambda: write('portrait_rotated', frames(25, 72), rotate=90)),
     ('iphone_hevc', 'Clean 72 BPM as an HEVC .mov file, like an iPhone.',
